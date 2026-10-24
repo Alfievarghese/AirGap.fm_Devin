@@ -701,58 +701,66 @@ function renderAuthority(el: HTMLElement): void {
 
             <!-- SUBTAB 2: Custom Pager (EN / ML / HI) -->
             <div id="auth-tab-custom-content" style="${authActiveTab === 'custom' ? '' : 'display: none;'}">
-              <div class="flex justify-between items-center mb-6">
-                <label class="text-xs text-secondary font-bold uppercase tracking-wider">Emergency Custom Pager Text</label>
-                <div id="pager-script-badge" class="badge">ASCII 1-Byte Mode Active</div>
+              <div class="flex justify-between items-center mb-4">
+                <label class="text-xs text-secondary font-bold uppercase tracking-wider">Custom Message (Max 6 Chars)</label>
+                <div id="pager-script-badge" class="badge">Max 6 Chars</div>
               </div>
+              <p class="text-secondary mb-8" style="font-size: 11px; line-height: 1.4;">
+                Short acoustic words keep sound waves under ~1.1s so they transmit reliably without audio clutter.
+              </p>
 
-              <div class="mb-8">
+              <div class="mb-10">
                 <input 
                   type="text" 
                   id="custom-pager-input" 
-                  maxlength="8" 
-                  placeholder="e.g. സഹായം, വെള്ളം, मदद, FIRE, SOS" 
+                  maxlength="6" 
+                  placeholder="e.g. HELP, WATER, SOS, തീ" 
                   value="${customPagerText}" 
-                  style="font-size: 16px; font-family: var(--font-mono); padding: 10px 12px; width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border-line);" 
+                  style="font-size: 16px; font-family: var(--font-mono); padding: 10px 12px; width: 100%; border-radius: var(--radius-md); border: 1.5px solid var(--border-line);" 
                 />
-                <div id="pager-byte-counter" class="text-xs text-right mt-4 font-mono text-secondary">
-                  0 / 6 Compressed Bytes (66% airtime saved)
+                <div class="flex justify-between items-center mt-6 text-xs text-secondary">
+                  <span id="pager-byte-counter" class="font-mono font-bold text-primary">0 / 6 Characters Used</span>
+                  <span class="text-muted">(14-Byte Fast Audio Frame)</span>
                 </div>
               </div>
 
               <!-- Quick Tokens Chips -->
               <div class="mb-12">
-                <div class="text-xs text-secondary mb-6 font-bold">Quick Disaster Emergency Tokens:</div>
+                <div class="text-xs text-secondary mb-6 font-bold uppercase tracking-wider">1-Tap Disaster Keywords (Auto-Translates EN / ML / HI):</div>
                 <div class="flex flex-wrap gap-6" id="pager-quick-chips">
-                  <button class="chip chip-pager" data-text="സഹായം">സഹായം (Help)</button>
-                  <button class="chip chip-pager" data-text="വെള്ളം">വെള്ളം (Water)</button>
-                  <button class="chip chip-pager" data-text="തീ">തീ (Fire)</button>
-                  <button class="chip chip-pager" data-text="മദദ">मदद (Help)</button>
-                  <button class="chip chip-pager" data-text="पानी">पानी (Water)</button>
-                  <button class="chip chip-pager" data-text="DOCTOR">DOCTOR</button>
-                  <button class="chip chip-pager" data-text="FOOD">FOOD</button>
-                  <button class="chip chip-pager" data-text="SOS">SOS</button>
+                  <button type="button" class="chip chip-pager font-bold" data-text="HELP">HELP (സഹായം / मदद)</button>
+                  <button type="button" class="chip chip-pager font-bold" data-text="WATER">WATER (വെള്ളം / पानी)</button>
+                  <button type="button" class="chip chip-pager font-bold" data-text="FIRE">FIRE (തീ / आग)</button>
+                  <button type="button" class="chip chip-pager font-bold" data-text="FOOD">FOOD (ഭക്ഷണം / खाना)</button>
+                  <button type="button" class="chip chip-pager font-bold" data-text="DOCTOR">DOCTOR (ഡോക്ടർ / डॉक्टर)</button>
+                  <button type="button" class="chip chip-pager font-bold" data-text="SOS">SOS (Emergency)</button>
+                  <button type="button" class="chip chip-pager font-bold" data-text="SAFE">SAFE (സുരക്ഷിതം)</button>
                 </div>
               </div>
 
               <!-- Trilingual Live Preview Card -->
-              <div class="p-12 mb-12" style="background: var(--bg-inset); border-radius: var(--radius-md); border: 1px solid var(--border-line); font-size: 13px; line-height: 1.5;">
-                <div class="flex justify-between items-center mb-6">
-                  <div class="text-faint" style="font-size: 10px; font-family: var(--font-mono);">RECEIVER TRANSLATION PREVIEW (14B FAST FRAME):</div>
-                  <span id="pager-orig-badge" class="badge badge-outline" style="font-size: 10px;">[Orig: —]</span>
+              <div class="p-12 mb-12" style="background: var(--bg-inset); border-radius: var(--radius-md); border: 1.5px solid var(--border-card); font-size: 13px; line-height: 1.5;">
+                <div class="flex justify-between items-center mb-8">
+                  <div class="text-xs font-mono font-bold text-secondary uppercase">Receiver Display Preview:</div>
+                  <span id="pager-orig-badge" class="badge">Waiting for input...</span>
                 </div>
+
+                <div id="pager-preview-mode-info" class="text-xs text-secondary mb-8 p-6" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
+                  Type a keyword above to preview what phones in the room will display.
+                </div>
+
                 <div class="grid gap-6">
-                  <div class="flex items-center gap-8">
-                    <span class="chip" style="font-size: 9px; padding: 2px 5px;">EN</span>
-                    <span id="custom-preview-en" class="font-bold text-pure">Waiting for text...</span>
+                  <div class="flex items-center gap-8 p-6" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
+                    <span class="chip font-mono font-bold" style="font-size: 10px; padding: 2px 6px;">EN</span>
+                    <span id="custom-preview-en" class="font-bold text-primary">—</span>
                   </div>
-                  <div class="flex items-center gap-8">
-                    <span class="chip" style="font-size: 9px; padding: 2px 5px;">ML</span>
-                    <span id="custom-preview-ml" class="text-patina">—</span>
+                  <div class="flex items-center gap-8 p-6" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
+                    <span class="chip font-mono font-bold" style="font-size: 10px; padding: 2px 6px;">ML</span>
+                    <span id="custom-preview-ml" class="font-bold text-patina">—</span>
                   </div>
-                  <div class="flex items-center gap-8">
-                    <span class="chip" style="font-size: 9px; padding: 2px 5px;">HI</span>
-                    <span id="custom-preview-hi" class="text-muted">—</span>
+                  <div class="flex items-center gap-8 p-6" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
+                    <span class="chip font-mono font-bold" style="font-size: 10px; padding: 2px 6px;">HI</span>
+                    <span id="custom-preview-hi" class="font-bold text-secondary">—</span>
                   </div>
                 </div>
               </div>
@@ -852,25 +860,51 @@ function renderAuthority(el: HTMLElement): void {
   const customHi = el.querySelector('#custom-preview-hi') as HTMLElement;
 
   const updatePagerPreview = (val: string) => {
-    customPagerText = val;
-    const { scriptId, bytes } = encodeIndicString(val, 6);
-    const byteLen = bytes.length;
-    pagerCounter.textContent = `${byteLen} / 6 Compressed Bytes (66% airtime saved)`;
-    pagerBadge.textContent = getScriptLabel(scriptId);
+    customPagerText = val.slice(0, 6);
+    const { scriptId } = encodeIndicString(customPagerText, 5);
+    const charLen = customPagerText.length;
+    pagerCounter.textContent = `${charLen} / 6 Characters Used`;
+    pagerBadge.textContent = `${getScriptLabel(scriptId)} · ${6 - charLen} left`;
 
-    if (val.trim()) {
-      pagerOrigBadge.textContent = `[Orig: ${val.trim()}]`;
+    const modeInfo = el.querySelector('#pager-preview-mode-info') as HTMLElement;
 
-      const tEn = translateCustomText(val, scriptId, 'en');
-      const tMl = translateCustomText(val, scriptId, 'ml');
-      const tHi = translateCustomText(val, scriptId, 'hi');
+    if (customPagerText.trim()) {
+      const tEn = translateCustomText(customPagerText, scriptId, 'en');
+      const tMl = translateCustomText(customPagerText, scriptId, 'ml');
+      const tHi = translateCustomText(customPagerText, scriptId, 'hi');
+      const isDict = tEn.isDictionaryMatch || tMl.isDictionaryMatch || tHi.isDictionaryMatch;
 
-      customEn.textContent = tEn.translatedText || val;
-      customMl.textContent = tMl.translatedText || val;
-      customHi.textContent = tHi.translatedText || val;
+      if (isDict) {
+        pagerOrigBadge.className = 'badge';
+        pagerOrigBadge.style.cssText = 'background: var(--color-emerald-subtle); color: var(--color-emerald); border: 1px solid var(--color-emerald-border); font-weight: 700;';
+        pagerOrigBadge.textContent = 'Auto-Translation Active';
+
+        if (modeInfo) {
+          modeInfo.innerHTML = `<strong>Dictionary Match:</strong> Receiving phones will automatically display this alert in their selected language.`;
+        }
+        customEn.textContent = tEn.translatedText || customPagerText;
+        customMl.textContent = tMl.translatedText || customPagerText;
+        customHi.textContent = tHi.translatedText || customPagerText;
+      } else {
+        pagerOrigBadge.className = 'badge';
+        pagerOrigBadge.style.cssText = 'background: var(--bg-subtle); color: var(--text-secondary); border: 1px solid var(--border-card); font-weight: 700;';
+        pagerOrigBadge.textContent = 'Custom Exact Text';
+
+        if (modeInfo) {
+          modeInfo.innerHTML = `<strong>Raw Custom Message:</strong> Not in disaster dictionary. Receiving phones will display <strong>"${customPagerText}"</strong> as typed.`;
+        }
+        customEn.textContent = customPagerText;
+        customMl.textContent = `${customPagerText} (As Typed)`;
+        customHi.textContent = `${customPagerText} (As Typed)`;
+      }
     } else {
-      pagerOrigBadge.textContent = '[Orig: —]';
-      customEn.textContent = 'Waiting for text...';
+      pagerOrigBadge.className = 'badge badge-outline';
+      pagerOrigBadge.style.cssText = '';
+      pagerOrigBadge.textContent = 'Waiting for input...';
+      if (modeInfo) {
+        modeInfo.innerHTML = 'Type a keyword above to preview what phones in the room will display.';
+      }
+      customEn.textContent = '—';
       customMl.textContent = '—';
       customHi.textContent = '—';
     }
