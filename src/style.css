@@ -150,8 +150,14 @@ body {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 0 24px 112px 24px;
+  padding: 0 24px 130px 24px;
   position: relative;
+}
+
+@media (max-width: 640px) {
+  #app {
+    padding: 0 12px 140px 12px;
+  }
 }
 
 /* ─── Tactical Transceiver Header ─── */
@@ -163,6 +169,15 @@ body {
   margin-bottom: 20px;
   border-bottom: 1.5px solid var(--border-card);
   position: relative;
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0 10px 0;
+    margin-bottom: 14px;
+  }
 }
 
 .brand-badge {
@@ -245,6 +260,59 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0 12px 0;
+    margin-bottom: 12px;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .brand-badge {
+    gap: 8px;
+    width: auto;
+    flex-shrink: 0;
+  }
+  .brand-logo-mark {
+    width: 32px;
+    height: 32px;
+  }
+  .brand-logo-mark svg {
+    width: 18px;
+    height: 18px;
+  }
+  .brand-title {
+    font-size: 18px;
+    gap: 4px;
+  }
+  .brand-channel-tag {
+    display: none;
+  }
+  .brand-sub {
+    display: none;
+  }
+  .header-meta {
+    width: auto;
+    justify-content: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .node-id-pill {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  .offline-pill {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
+  .status-badge {
+    padding: 3px 6px;
+    font-size: 10px;
+  }
 }
 
 /* Offline Ready Physical Pill */
@@ -341,7 +409,15 @@ body {
 
 @media (max-width: 900px) {
   .cockpit-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .cockpit-grid.reverse-mobile > :first-child {
+    order: 2;
+  }
+  .cockpit-grid.reverse-mobile > :last-child {
+    order: 1;
   }
 }
 
@@ -894,18 +970,20 @@ body {
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 99;
+  z-index: 999;
   max-width: calc(100vw - 20px);
 }
 
 .nav-bar {
   display: flex;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-pill);
   padding: 5px;
   gap: 4px;
-  box-shadow: var(--shadow-floating);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
   max-width: 100%;
 }
 
@@ -948,25 +1026,48 @@ body {
   color: #ffffff;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   .nav-dock-container {
-    bottom: 12px;
+    bottom: 10px;
     width: calc(100vw - 16px);
   }
   .nav-bar {
-    padding: 3px 4px;
+    padding: 3px;
     gap: 2px;
     width: 100%;
     justify-content: space-around;
   }
   .nav-tab {
-    padding: 6px 8px;
+    padding: 8px 10px;
     font-size: 11px;
     gap: 4px;
+    flex: 1;
+    justify-content: center;
   }
   .nav-tab svg {
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
+  }
+  .card {
+    padding: 14px 12px;
+    margin-bottom: 14px;
+  }
+  .target-toggle-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .target-toggle-group .btn {
+    width: 100%;
+    font-size: 12px;
+    padding: 10px 12px;
+    justify-content: flex-start;
+    text-align: left;
+    white-space: normal;
+    line-height: 1.2;
+  }
+  .mesh3d-container {
+    height: 150px !important;
   }
 }
 

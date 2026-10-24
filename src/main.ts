@@ -45,6 +45,12 @@ import {
   NODE_ID_BROADCAST,
   NODE_ID_WALL,
 } from './protocol/nodeId';
+import {
+  renderTargetSelector,
+  bindTargetSelectorEvents,
+  resolveTargetNodeId,
+  TargetType,
+} from './ui/authority';
 import { logEvent, exportCSV, exportJSON, clearLogs } from './store/log';
 import { DEFAULT_CONFIG } from './lib/config';
 import { runSimulation, SimResult } from './relay/sim';
@@ -78,8 +84,10 @@ let modularActionId = 0;
 let modularLocationId = 0;
 let useModularSentence = false;
 
-// Node Identity
+// Node Identity & Targeted Unicast State
 let myNodeId = getLocalNodeId();
+let authTargetType: TargetType = 'broadcast';
+let authUnicastHex: string = 'A4';
 
 // Wall State
 let wallFrameCount = 0;
@@ -564,7 +572,7 @@ function renderAuthority(el: HTMLElement): void {
       </div>
     </div>
 
-    <div class="cockpit-grid">
+    <div class="cockpit-grid reverse-mobile">
       <!-- Left Column: Authorization & 3D Key Anchor -->
       <div>
         <!-- Transmitter Status Card -->
@@ -607,8 +615,10 @@ function renderAuthority(el: HTMLElement): void {
         </div>
       </div>
 
-      <!-- Right Column: Message Composer -->
+      <!-- Right Column: Target Destination & Message Composer -->
       <div>
+        ${renderTargetSelector(authTargetType, authUnicastHex)}
+
         <div class="card p-0" style="overflow: hidden;">
           <!-- Dual Subtabs Nav -->
           <div class="auth-tabs-nav">
@@ -679,7 +689,13 @@ function renderAuthority(el: HTMLElement): void {
 
               <button class="btn btn-danger w-full mt-12" id="auth-broadcast-btn" ${isAuthorityBroadcasting ? 'disabled' : ''}>
                 ${ICONS.broadcast}
-                <span id="auth-btn-text">Broadcast Emergency Beacon (14B • 3x repeats)</span>
+                <span id="auth-btn-text">
+                  ${authTargetType === 'broadcast'
+                    ? 'Broadcast Emergency Beacon to Room (14B • 3x repeats)'
+                    : authTargetType === 'unicast'
+                    ? `Send Direct Beacon to Phone #${authUnicastHex} (14B • 3x repeats)`
+                    : 'Send Emergency Beacon to Projector Wall (14B • 3x repeats)'}
+                </span>
               </button>
             </div>
 
@@ -743,7 +759,13 @@ function renderAuthority(el: HTMLElement): void {
 
               <button class="btn btn-danger w-full mt-12" id="auth-broadcast-custom-btn" ${isAuthorityBroadcasting ? 'disabled' : ''}>
                 ${ICONS.broadcast}
-                <span id="auth-custom-btn-text">Broadcast Custom Pager Chirp (14B • ~1.2s airtime)</span>
+                <span id="auth-custom-btn-text">
+                  ${authTargetType === 'broadcast'
+                    ? 'Broadcast Custom Pager Chirp (14B • ~1.2s airtime)'
+                    : authTargetType === 'unicast'
+                    ? `Send Direct Chirp to Phone #${authUnicastHex} (14B • ~1.2s airtime)`
+                    : 'Send Custom Chirp to Projector Wall (14B • ~1.2s airtime)'}
+                </span>
               </button>
             </div>
           </div>
@@ -870,16 +892,30 @@ function renderAuthority(el: HTMLElement): void {
     });
   });
 
+  // Target Destination Selector Events
+  bindTargetSelectorEvents(
+    el,
+    { targetType: authTargetType, unicastHex: authUnicastHex },
+    (newState, shouldRerender = true) => {
+      authTargetType = newState.targetType;
+      authUnicastHex = newState.unicastHex;
+      if (shouldRerender) {
+        render();
+      }
+    }
+  );
+
   // Broadcast Instant Alert
   el.querySelector('#auth-broadcast-btn')!.addEventListener('click', async () => {
+    const targetNodeId = resolveTargetNodeId(authTargetType, authUnicastHex);
     isAuthorityBroadcasting = true;
     render();
 
     await initAudio();
     if (useModularSentence) {
-      await sendAuthorityBeacon(0xff, new Uint8Array([modularSubjectId, modularActionId, modularLocationId]), NODE_ID_BROADCAST);
+      await sendAuthorityBeacon(0xff, new Uint8Array([modularSubjectId, modularActionId, modularLocationId]), targetNodeId);
     } else {
-      await sendAuthorityBeacon(selectedTemplateId, undefined, NODE_ID_BROADCAST);
+      await sendAuthorityBeacon(selectedTemplateId, undefined, targetNodeId);
     }
 
     isAuthorityBroadcasting = false;
@@ -893,11 +929,12 @@ function renderAuthority(el: HTMLElement): void {
       return;
     }
 
+    const targetNodeId = resolveTargetNodeId(authTargetType, authUnicastHex);
     isAuthorityBroadcasting = true;
     render();
 
     await initAudio();
-    await sendCustomPagerBeacon(customPagerText.trim(), NODE_ID_BROADCAST);
+    await sendCustomPagerBeacon(customPagerText.trim(), targetNodeId);
 
     isAuthorityBroadcasting = false;
     render();
