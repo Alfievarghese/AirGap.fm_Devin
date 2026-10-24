@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" width="1200" height="520">
+  <defs>
+    <!-- Background Grid -->
+    <pattern id="tactical-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#e8e4d8" stroke-width="1" />
+    </pattern>
+    <radialGradient id="center-glow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#f5f3ec" stop-opacity="1" />
+    </radialGradient>
+    <linearGradient id="vermillion-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff522b" />
+      <stop offset="100%" stop-color="#d9300a" />
+    </linearGradient>
+    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <linearGradient id="cyan-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <filter id="card-shadow" x="-8%" y="-8%" width="116%" height="124%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#1c1917" flood-opacity="0.08" />
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#1c1917" flood-opacity="0.04" />
+    </filter>
+  </defs>
+
+  <!-- Canvas Background -->
+  <rect width="1200" height="520" fill="url(#center-glow)" />
+  <rect width="1200" height="520" fill="url(#tactical-grid)" />
+
+  <!-- Outer Decorative Technical Frame -->
+  <rect x="24" y="24" width="1152" height="472" rx="16" fill="none" stroke="#ded9ca" stroke-width="1.5" />
+  
+  <!-- Technical Corner Registration Crosshairs -->
+  <g stroke="#a8a29e" stroke-width="1.5">
+    <path d="M 36 24 L 36 40 M 24 36 L 40 36" />
+    <path d="M 1164 24 L 1164 40 M 1160 36 L 1176 36" />
+    <path d="M 36 480 L 36 496 M 24 484 L 40 484" />
+    <path d="M 1164 480 L 1164 496 M 1160 484 L 1176 484" />
+  </g>
+
+  <!-- Technical Top Edge Metadata -->
+  <text x="56" y="52" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace" font-size="11" font-weight="700" fill="#78716c" letter-spacing="1.5">PROTOCOL SPECIFICATION // RFC-6206 TRICKLE MESH</text>
+  <text x="1144" y="52" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace" font-size="11" font-weight="700" fill="#f03e18" letter-spacing="1.5">● ZERO INFRASTRUCTURE · ZERO INTERNET</text>
+
+  <!-- Central Hero Card Housing -->
+  <g filter="url(#card-shadow)">
+    <rect x="56" y="74" width="1088" height="376" rx="12" fill="#ffffff" stroke="#e7e4d8" stroke-width="1.5" />
+  </g>
+
+  <!-- Brand Logo & Identity Group -->
+  <g transform="translate(100, 114)">
+    <!-- Squircle Icon Mark -->
+    <rect x="0" y="0" width="88" height="88" rx="22" fill="url(#vermillion-grad)" />
+    
+    <!-- White Inner Vector: Acoustic Waves & Dual Nodes -->
+    <g transform="translate(14, 14)" stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <!-- High-Frequency Pulse Waves -->
+      <path d="M 12 18 C 19 8, 41 8, 48 18" stroke-width="4.5" />
+      <path d="M 19 25 C 24 17, 36 17, 41 25" stroke-width="4" />
+      <!-- Acoustic Bridge Link -->
+      <line x1="20" y1="41" x2="40" y2="41" stroke-width="4.5" />
+      <!-- Transceiver Nodes -->
+      <circle cx="17" cy="41" r="5.5" fill="#ffffff" stroke-width="2.5" />
+      <circle cx="43" cy="41" r="5.5" fill="#ffffff" stroke-width="2.5" />
+    </g>
+
+    <!-- Wordmark & Tagline -->
+    <text x="110" y="58" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="64" font-weight="900" fill="#0f172a" letter-spacing="-2">AirGap<tspan fill="#f03e18">.fm</tspan></text>
+    
+    <!-- Hardware Channel Badge -->
+    <g transform="translate(470, 22)">
+      <rect x="0" y="0" width="220" height="34" rx="6" fill="#f5f3ec" stroke="#ded9ca" stroke-width="1" />
+      <text x="110" y="22" text-anchor="middle" font-family="'SF Mono', Menlo, Consolas, monospace" font-size="13" font-weight="700" fill="#44403c" letter-spacing="0.5">CH-01 · 1.8–6.3 kHz</text>
+    </g>
+
+    <!-- Subtitle -->
+    <text x="112" y="90" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="20" font-weight="600" fill="#57534e" letter-spacing="-0.3">
+      Offline Acoustic Mesh Emergency Alert Transceiver
+    </text>
+  </g>
+
+  <!-- Technical Divider Line -->
+  <line x1="100" y1="244" x2="1100" y2="244" stroke="#f0ede4" stroke-width="1.5" />
+
+  <!-- Description Narrative -->
+  <text x="100" y="278" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="15" font-weight="500" fill="#44403c">
+    Relays cryptographically authenticated disaster directives and direct unicast pager alerts across smartphones over near-ultrasonic sound waves.
+  </text>
+  <text x="100" y="302" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif" font-size="15" font-weight="500" fill="#78716c">
+    Engineered for catastrophic blackouts, floods, and infrastructure failures with zero cellular towers, zero Wi-Fi, and zero Bluetooth.
+  </text>
+
+  <!-- Feature Chips Pill Row -->
+  <g transform="translate(100, 340)">
+    <!-- Pill 1: 14-Byte Frame -->
+    <g transform="translate(0, 0)">
+      <rect width="180" height="42" rx="8" fill="#fef2f2" stroke="#fecaca" stroke-width="1.2" />
+      <circle cx="20" cy="21" r="5" fill="#f03e18" />
+      <text x="34" y="26" font-family="'SF Mono', Consolas, monospace" font-size="12" font-weight="700" fill="#991b1b">14B FAST FRAME</text>
+    </g>
+
+    <!-- Pill 2: 1-Byte Indic Compressor -->
+    <g transform="translate(192, 0)">
+      <rect width="232" height="42" rx="8" fill="#fffbeb" stroke="#fde68a" stroke-width="1.2" />
+      <circle cx="20" cy="21" r="5" fill="#f59e0b" />
+      <text x="34" y="26" font-family="'SF Mono', Consolas, monospace" font-size="12" font-weight="700" fill="#92400e">1-BYTE INDIC (ML / HI)</text>
+    </g>
+
+    <!-- Pill 3: Targeted Routing -->
+    <g transform="translate(436, 0)">
+      <rect width="216" height="42" rx="8" fill="#ecfeff" stroke="#a5f3fc" stroke-width="1.2" />
+      <circle cx="20" cy="21" r="5" fill="#06b6d4" />
+      <text x="34" y="26" font-family="'SF Mono', Consolas, monospace" font-size="12" font-weight="700" fill="#155e75">TARGETED UNICAST</text>
+    </g>
+
+    <!-- Pill 4: 32-Bit HMAC -->
+    <g transform="translate(664, 0)">
+      <rect width="180" height="42" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.2" />
+      <circle cx="20" cy="21" r="5" fill="#10b981" />
+      <text x="34" y="26" font-family="'SF Mono', Consolas, monospace" font-size="12" font-weight="700" fill="#166534">32-BIT HMAC SHA</text>
+    </g>
+
+    <!-- Pill 5: RFC 6206 Trickle -->
+    <g transform="translate(856, 0)">
+      <rect width="144" height="42" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" />
+      <circle cx="20" cy="21" r="5" fill="#64748b" />
+      <text x="34" y="26" font-family="'SF Mono', Consolas, monospace" font-size="12" font-weight="700" fill="#334155">RFC-6206 MESH</text>
+    </g>
+  </g>
+
+  <!-- Bottom Technical Footer Bar -->
+  <text x="56" y="484" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace" font-size="10" font-weight="600" fill="#a8a29e">DEV DAY EXCHANGE COMMUNITY HACKATHON // KOCHI 2026</text>
+  <text x="1144" y="484" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace" font-size="10" font-weight="600" fill="#a8a29e">AIRGAP.FM PROTOCOL ENGINE · OPEN SOURCE SUBMISSION</text>
+</svg>

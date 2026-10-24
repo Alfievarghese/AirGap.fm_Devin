@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="cover.svg" alt="AirGap.fm Cover Banner" width="100%" />
+</p>
+
 # AirGap.fm · Offline Acoustic Mesh Alert Relay
 
 > **DevDay Exchange Community Hackathon: Kochi (10–11 October 2026)**  
