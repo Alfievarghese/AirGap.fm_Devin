@@ -7,6 +7,7 @@
 
 import type { RelayConfig } from '../lib/config';
 import { DEFAULT_CONFIG, randRange } from '../lib/config';
+import type { GGWaveModule } from 'ggwave';
 
 export type AudioState = 'IDLE' | 'LISTEN' | 'TX' | 'COOLDOWN';
 
@@ -15,21 +16,6 @@ export interface AudioEngineCallbacks {
   onStateChange: (state: AudioState) => void;
   onError: (msg: string) => void;
   onLevelChange?: (level: number) => void;
-}
-
-interface GGWaveModule {
-  init: (params: unknown) => number;
-  free: (instance: number) => void;
-  encode: (
-    instance: number,
-    payload: string | Uint8Array,
-    protocolId: number,
-    volume: number
-  ) => Float32Array;
-  decode: (instance: number, samples: Float32Array) => Uint8Array | null;
-  getDefaultParameters: () => Record<string, unknown>;
-  ProtocolId: Record<string, number>;
-  TxProtocolId?: Record<string, number>;
 }
 
 let ggwaveModule: GGWaveModule | null = null;
@@ -228,12 +214,33 @@ export class AudioEngine {
         URL.revokeObjectURL(blobUrl);
 
         const workletNode = new AudioWorkletNode(this.ctx, 'ggwave-capture-processor');
+        let micAccumulator = new Float32Array(4096);
+        let micAccIdx = 0;
+
         workletNode.port.onmessage = (e) => {
           if (this.state !== 'LISTEN' || !ggwaveModule || ggwaveInstance < 0) return;
-          const samples = e.data as Float32Array;
-          const result = ggwaveModule.decode(ggwaveInstance, samples);
-          if (result && result.length > 0) {
-            this.callbacks.onDecode(new Uint8Array(result));
+          const chunk = e.data as Float32Array;
+          if (!chunk || chunk.length === 0) return;
+
+          const toCopy = Math.min(chunk.length, 4096 - micAccIdx);
+          micAccumulator.set(chunk.subarray(0, toCopy), micAccIdx);
+          micAccIdx += toCopy;
+
+          if (micAccIdx >= 4096) {
+            const rawBytes = new Int8Array(
+              micAccumulator.buffer,
+              micAccumulator.byteOffset,
+              micAccumulator.byteLength
+            );
+            const result = ggwaveModule.decode(
+              ggwaveInstance,
+              rawBytes
+            );
+            if (result && result.length > 0) {
+              this.callbacks.onDecode(new Uint8Array(result));
+            }
+            micAccumulator = new Float32Array(4096);
+            micAccIdx = 0;
           }
         };
 
@@ -255,9 +262,14 @@ export class AudioEngine {
         if (!ggwaveModule || ggwaveInstance < 0) return;
 
         const samples = e.inputBuffer.getChannelData(0);
+        const rawBytes = new Int8Array(
+          samples.buffer,
+          samples.byteOffset,
+          samples.byteLength
+        );
         const result = ggwaveModule.decode(
           ggwaveInstance,
-          new Float32Array(samples)
+          rawBytes
         );
 
         if (result && result.length > 0) {
@@ -336,41 +348,48 @@ export class AudioEngine {
     const protocolId = protocolIds?.[this.config.ggwaveProtocol] ?? 1;
 
     // Encode audio
-    const waveform = ggwaveModule.encode(
+    const rawWaveform = ggwaveModule.encode(
       ggwaveInstance,
-      payload as string,
+      payload,
       protocolId,
       this.config.ggwaveVolume
     );
 
-    if (!waveform || waveform.length === 0) {
+    if (!rawWaveform || rawWaveform.length === 0) {
       this.callbacks.onError('ggwave encode returned empty waveform');
       this.setState(prevState);
       return;
     }
 
-    // Play waveform with smooth attack and decay envelope to prevent harsh speaker clipping
-    const buffer = this.ctx.createBuffer(1, waveform.length, this.ctx.sampleRate);
-    buffer.getChannelData(0).set(waveform);
+    // ggwave returns Int8Array containing raw Float32 audio samples (4 bytes per sample)
+    const floatSamples = new Float32Array(
+      rawWaveform.buffer,
+      rawWaveform.byteOffset,
+      rawWaveform.byteLength / 4
+    );
+
+    // Play waveform with clean audio buffer
+    const buffer = this.ctx.createBuffer(1, floatSamples.length, this.ctx.sampleRate);
+    buffer.getChannelData(0).set(floatSamples);
     const source = this.ctx.createBufferSource();
     source.buffer = buffer;
 
     const gainNode = this.ctx.createGain();
     const now = this.ctx.currentTime;
-    const duration = waveform.length / this.ctx.sampleRate;
+    const duration = floatSamples.length / this.ctx.sampleRate;
 
-    // Smooth 15ms fade-in and 25ms fade-out
-    gainNode.gain.setValueAtTime(0.001, now);
-    gainNode.gain.exponentialRampToValueAtTime(1.0, now + 0.015);
-    gainNode.gain.setValueAtTime(1.0, now + Math.max(0.015, duration - 0.025));
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    // Fast 2ms linear ramp prevents speaker pop without attenuating 21ms preamble tone
+    gainNode.gain.setValueAtTime(0.01, now);
+    gainNode.gain.linearRampToValueAtTime(1.0, now + 0.002);
+    gainNode.gain.setValueAtTime(1.0, now + Math.max(0.002, duration - 0.005));
+    gainNode.gain.linearRampToValueAtTime(0.01, now + duration);
 
     source.connect(gainNode);
     gainNode.connect(this.ctx.destination);
     source.start(now);
 
     // Wait for playback to finish, then cooldown
-    const durationMs = (waveform.length / this.ctx.sampleRate) * 1000;
+    const durationMs = duration * 1000;
 
     return new Promise((resolve) => {
       source.onended = () => {
@@ -398,16 +417,10 @@ export class AudioEngine {
 
   /**
    * Transmit raw bytes (for relay: frame bytes as binary).
-   * ggwave's encode expects string, so we pass raw bytes as a string.
+   * Passes Uint8Array directly to ggwave so Emscripten does NOT corrupt with UTF-8 conversion.
    */
   async transmitBytes(payload: Uint8Array): Promise<void> {
-    // ggwave encode takes a string — convert bytes to a string representation
-    // that ggwave can handle. Since ggwave operates on raw bytes internally,
-    // we pass the bytes as a Latin-1 string (each byte maps to a char).
-    const str = Array.from(payload)
-      .map((b) => String.fromCharCode(b))
-      .join('');
-    return this.transmit(str);
+    return this.transmit(payload);
   }
 
   /** Play a test tone (1 kHz, 500ms) to verify speaker output */
