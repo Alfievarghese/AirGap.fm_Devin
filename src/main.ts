@@ -615,8 +615,10 @@ function renderAuthority(el: HTMLElement): void {
         </div>
       </div>
 
-      <!-- Right Column: Emergency Protocol Template & Custom Pager Dual Subtabs -->
+      <!-- Right Column: Target Routing & Message Composer -->
       <div>
+        ${renderTargetSelector(authTargetType, authCustomTargetHex)}
+
         <div class="card p-0" style="overflow: hidden;">
           <!-- Dual Subtabs Nav -->
           <div class="auth-tabs-nav">
@@ -685,10 +687,7 @@ function renderAuthority(el: HTMLElement): void {
                 <div id="preview-hi" class="text-muted mt-4"></div>
               </div>
 
-              <!-- Compact Target Destination Selector -->
-              ${renderTargetSelector(authTargetType, authCustomTargetHex)}
-
-              <button class="btn btn-danger w-full" id="auth-broadcast-btn" ${isAuthorityBroadcasting ? 'disabled' : ''}>
+              <button class="btn btn-danger w-full mt-12" id="auth-broadcast-btn" ${isAuthorityBroadcasting ? 'disabled' : ''}>
                 ${ICONS.broadcast}
                 <span id="auth-btn-text">Broadcast Emergency Beacon (14B • 3x repeats)</span>
               </button>
@@ -752,10 +751,7 @@ function renderAuthority(el: HTMLElement): void {
                 </div>
               </div>
 
-              <!-- Compact Target Destination Selector -->
-              ${renderTargetSelector(authTargetType, authCustomTargetHex)}
-
-              <button class="btn btn-danger w-full" id="auth-broadcast-custom-btn" ${isAuthorityBroadcasting ? 'disabled' : ''}>
+              <button class="btn btn-danger w-full mt-12" id="auth-broadcast-custom-btn" ${isAuthorityBroadcasting ? 'disabled' : ''}>
                 ${ICONS.broadcast}
                 <span id="auth-custom-btn-text">Broadcast Custom Pager Chirp (14B • ~1.2s airtime)</span>
               </button>

@@ -32,3 +32,5 @@ Thumbs.db
 *.sw?
 .agents
 .gemini
+
+.vercel
