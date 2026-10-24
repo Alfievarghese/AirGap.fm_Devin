@@ -1,5 +1,5 @@
 /**
- * EchoNet main entry point.
+ * AirGap.fm main entry point.
  * Wires screens: Listener, Authority, Wall, Lab, Sim.
  * Impeccable Neo-Kinpaku System & UI-UX-Pro-Max Design Standards.
  */
@@ -438,50 +438,50 @@ function renderListener(el: HTMLElement): void {
         </div>
       </div>
 
-      <!-- Right Column: 13-Byte Frame Anatomy & Offline Procedure (NO AI SLOP) -->
+      <!-- Right Column: 14-Byte Frame Anatomy & Offline Procedure -->
       <div>
-        <!-- 13-Byte Acoustic Frame Anatomy Strip -->
+        <!-- 14-Byte Acoustic Frame Anatomy Strip -->
         <div class="frame-anatomy-card">
           <div class="flex justify-between items-center">
             <div class="card-title" style="margin-bottom: 0;">
               ${ICONS.shieldCheck}
-              <span>13-Byte Acoustic Frame Anatomy</span>
+              <span>14-Byte Acoustic Frame Anatomy</span>
             </div>
             <span class="brand-channel-tag">GGWAVE FSK</span>
           </div>
           <p class="text-secondary mt-8" style="font-size: 12px; line-height: 1.5;">
-            How AirGap.fm packs an authenticated alert into 13 bytes to propagate across rooms in 0.8s:
+            How AirGap.fm packs an authenticated alert into 14 bytes to propagate across rooms in ~1.2s:
           </p>
 
           <div class="frame-strip">
-            <div class="frame-segment frame-segment-magic" data-desc="Header (1 Byte): Version, FrameType & ScriptId identifying AirGap.fm packets from random ambient noise.">
+            <div class="frame-segment frame-segment-magic" data-desc="Header (1 Byte): Version (2b), FrameType (2b: Template 0 / Custom Pager 1), ScriptId (4b: ASCII / Malayalam / Hindi).">
               <span class="frame-segment-byte">1B</span>
               <span class="frame-segment-label">Header</span>
             </div>
-            <div class="frame-segment frame-segment-type" data-desc="Type (1 Byte): Encodes alert severity tier (Evacuate, Shelter, Medical, All Clear).">
+            <div class="frame-segment frame-segment-type" data-desc="Target Node ID (1 Byte): 0x00 = Room Broadcast, 0xFF = Projector Wall Sink, 0x01..0xFE = Direct Unicast.">
               <span class="frame-segment-byte">1B</span>
-              <span class="frame-segment-label">Type</span>
+              <span class="frame-segment-label">Target</span>
             </div>
-            <div class="frame-segment frame-segment-hop" data-desc="Hop Count (1 Byte): Prevents echo loops and bounds mesh propagation to 16 hops.">
-              <span class="frame-segment-byte">1B</span>
-              <span class="frame-segment-label">Hop</span>
+            <div class="frame-segment frame-segment-time" data-desc="Alert ID (2 Bytes): Unique uint16 identifier for deduplication across the acoustic mesh.">
+              <span class="frame-segment-byte">2B</span>
+              <span class="frame-segment-label">Alert ID</span>
             </div>
-            <div class="frame-segment frame-segment-time" data-desc="Time Bucket (1 Byte): Rolling 15-minute epoch prevents replay attacks across the room.">
-              <span class="frame-segment-byte">1B</span>
-              <span class="frame-segment-label">Epoch</span>
-            </div>
-            <div class="frame-segment frame-segment-data" data-desc="Alert Payload (4 Bytes): Localized emergency template ID + geofence quadrant ID.">
-              <span class="frame-segment-byte">4B</span>
+            <div class="frame-segment frame-segment-data" data-desc="Payload (5 Bytes): Template ID + Region Code + Modular params (Subject, Action, Location) OR 5 bytes of 1-byte compressed Indic/ASCII text.">
+              <span class="frame-segment-byte">5B</span>
               <span class="frame-segment-label">Payload</span>
             </div>
-            <div class="frame-segment frame-segment-mac" data-desc="HMAC-SHA256 (4 Bytes): 32-bit cryptographic signature verifying civil authority origin.">
+            <div class="frame-segment frame-segment-hop" data-desc="Hop & TTL (1 Byte): High nibble = hop count, low nibble = TTL. Mutable field excluded from MAC.">
+              <span class="frame-segment-byte">1B</span>
+              <span class="frame-segment-label">Hop|TTL</span>
+            </div>
+            <div class="frame-segment frame-segment-mac" data-desc="HMAC-SHA256 (4 Bytes): Truncated 32-bit cryptographic tag verifying civil authority origin over immutable bytes [0..8].">
               <span class="frame-segment-byte">4B</span>
               <span class="frame-segment-label">HMAC</span>
             </div>
           </div>
 
           <div id="frame-detail-text" class="frame-detail-callout">
-            <strong>Tap any segment</strong> to inspect byte allocation. Total frame airtime is ~0.84 seconds per acoustic hop.
+            <strong>Tap any segment</strong> to inspect byte allocation. Total frame airtime is ~1.2 seconds per acoustic hop.
           </div>
         </div>
 
@@ -1193,7 +1193,7 @@ function renderLab(el: HTMLElement): void {
     <div class="flex justify-between items-center mb-16">
       <div>
         <h1 style="font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Acoustic DSP Lab</h1>
-        <p class="text-secondary" style="font-size: 13px; margin-top: 2px;">Modem diagnostics, 13-byte compact frame verification, and frequency testing.</p>
+        <p class="text-secondary" style="font-size: 13px; margin-top: 2px;">Modem diagnostics, 14-byte compact frame verification, and frequency testing.</p>
       </div>
       <div class="hardware-segmented-control" style="width: 200px;">
         <button class="hardware-segment-btn ${labMode === 'receiver' ? 'active' : ''}" id="lab-mode-rx">Receiver</button>

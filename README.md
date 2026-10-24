@@ -4,8 +4,7 @@
 
 # AirGap.fm · Offline Acoustic Mesh Alert Relay
 
-> **DevDay Exchange Community Hackathon: Kochi (10–11 October 2026)**  
-> **[Event and registration on Luma](https://luma.com/z10nz8gp)** · **[Event rules](RULES.md)** · **[Agent instructions](AGENTS.md)** · **[Submission Details](SUBMISSION.md)**
+> Built for **Devin Hacks Kochi (2026)** · Zero-infrastructure acoustic mesh emergency relay operating over near-ultrasonic and audible sound waves with zero internet, zero cellular towers, and zero Bluetooth.
 
 ---
 
@@ -106,4 +105,4 @@ npm run build
   - `vitest` ([MIT License](https://vitest.dev/)) — unit testing framework.
   - `vite` & `vite-plugin-pwa` ([MIT License](https://vitejs.dev/)) — bundler and offline PWA service worker generator.
 
-See [AI_USAGE.md](AI_USAGE.md) for the AI assistance record and [CHANGELOG.md](CHANGELOG.md) for the development log.
+See [CHANGELOG.md](CHANGELOG.md) for the complete engineering event log.

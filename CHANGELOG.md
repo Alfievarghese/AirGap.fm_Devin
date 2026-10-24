@@ -4,6 +4,13 @@ Record each meaningful project change during the event, newest first.
 
 ## Event build log
 
+## 2026-10-24T22:25:00+05:30 — Frame Alignment, 14-Byte Protocol Hardening & Brand Integrity Audit
+
+- Changed: Corrected `src/crypto/mac.ts` comment (4-byte truncated HMAC-SHA256), updated `src/main.ts` and `src/style.css` 14-byte frame anatomy breakdown and branding, hardened `src/protocol/frame.ts` to strictly enforce 14-byte frame invariant, updated `package-lock.json` package name to `airgap-fm`.
+- Why: Ensure exact consistency between protocol specification, frame layout visualizer, binary encode logic, and test suites.
+- Validation: `npx vitest run` verified 39/39 tests passing; `npm run build` completed cleanly in 98ms.
+- Limitations: None.
+
 ## 2026-10-24T21:46:00+05:30 — Hackathon Submission Packaging & Final Git Synchronization
 
 - Changed: Added `SUBMISSION.md`, `RULES.md`, `AGENTS.md`, `AI_USAGE.md`, `.github/pull_request_template.md`, updated `README.md` and `.gitignore`.

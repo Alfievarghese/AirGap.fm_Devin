@@ -39,7 +39,7 @@ export async function computeMAC(data: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(sig, 0, 4);
 }
 
-/** Verify a truncated 8-byte HMAC-SHA256 */
+/** Verify a truncated 4-byte HMAC-SHA256 */
 export async function verifyMAC(
   data: Uint8Array,
   mac: Uint8Array

@@ -72,8 +72,8 @@ export interface BeaconFrame {
 /** Encode a BeaconFrame into a 14-byte Uint8Array */
 export function encodeFrame(frame: BeaconFrame): Uint8Array {
   const isCustom = frame.type === FrameType.CUSTOM_PAGER;
-  const payloadLen = isCustom && frame.customPayload && frame.customPayload.length > 5 ? 6 : 5;
-  const size = isCustom && payloadLen === 6 ? 15 : 14;
+  const payloadLen = 5;
+  const size = FRAME_SIZE;
   const buf = new Uint8Array(size);
 
   const scriptId = frame.scriptId ?? ScriptId.ASCII;
@@ -136,7 +136,7 @@ export function encodeFrame(frame: BeaconFrame): Uint8Array {
   return buf;
 }
 
-/** Decode a 14-byte (or 15-byte) Uint8Array into a BeaconFrame */
+/** Decode a 14-byte Uint8Array into a BeaconFrame */
 export function decodeFrame(buf: Uint8Array): BeaconFrame | null {
   if (buf.length < 13) return null;
 

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ECHONET · VIBRANT HUMANE FIELD HARDWARE DESIGN SYSTEM
+   AIRGAP.FM · VIBRANT HUMANE FIELD HARDWARE DESIGN SYSTEM
    Inspired by: Dieter Rams / Braun Audio Instruments x Teenage Engineering Field Gear
    Color Strategy: Non-dark, vibrant, high-contrast signal palette with tactile hardware physical depth.
    Craft Standards: Impeccable Craft Floor & UI-UX-Pro-Max Design Intelligence
@@ -630,7 +630,7 @@ body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--border-card);
 }
 
-/* ─── 13-Byte Acoustic Frame Anatomy Strip (REPLACING AI SLOP METRICS) ─── */
+/* ─── 14-Byte Acoustic Frame Anatomy Strip ─── */
 .frame-anatomy-card {
   background: #ffffff;
   border: 1.5px solid var(--border-card);
