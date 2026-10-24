@@ -55,32 +55,10 @@ export class AudioEngine {
    * MUST be called from a user gesture (tap/click) handler.
    */
   async init(): Promise<void> {
-    // 1. Load ggwave
-    if (!ggwaveModule) {
-      try {
-        const factory = (await import('ggwave')).default;
-        ggwaveModule = await factory();
-      } catch (e) {
-        this.callbacks.onError(`ggwave load failed: ${e}`);
-        throw e;
-      }
-    }
-
-    // 2. Init ggwave instance
-    if (ggwaveInstance < 0 && ggwaveModule) {
-      const params = ggwaveModule.getDefaultParameters();
-      // Set sample rate if AudioContext exists
-      if (this.ctx) {
-        (params as Record<string, unknown>)['sampleRateInp'] = this.ctx.sampleRate;
-        (params as Record<string, unknown>)['sampleRateOut'] = this.ctx.sampleRate;
-      }
-      ggwaveInstance = ggwaveModule.init(params);
-    }
-
-    // 3. iOS ringer workaround: play silent <audio> element
+    // 1. iOS ringer workaround: play silent <audio> element
     this.unlockIOSAudio();
 
-    // 4. Create AudioContext
+    // 2. Create AudioContext and resume
     if (!this.ctx) {
       this.ctx = new (window.AudioContext ||
         (window as unknown as { webkitAudioContext: typeof AudioContext })
@@ -94,20 +72,25 @@ export class AudioEngine {
       await this.ctx.resume();
     }
 
-    // Read actual sample rate (iOS may force 44100)
     const actualRate = this.ctx.sampleRate;
-    if (actualRate !== this.config.sampleRate) {
-      console.warn(
-        `Requested ${this.config.sampleRate} Hz, got ${actualRate} Hz`
-      );
-      // Re-init ggwave with actual rate
-      if (ggwaveModule && ggwaveInstance >= 0) {
-        ggwaveModule.free(ggwaveInstance);
-        const params = ggwaveModule.getDefaultParameters();
-        (params as Record<string, unknown>)['sampleRateInp'] = actualRate;
-        (params as Record<string, unknown>)['sampleRateOut'] = actualRate;
-        ggwaveInstance = ggwaveModule.init(params);
+
+    // 3. Load ggwave WASM
+    if (!ggwaveModule) {
+      try {
+        const factory = (await import('ggwave')).default;
+        ggwaveModule = await factory();
+      } catch (e) {
+        this.callbacks.onError(`ggwave load failed: ${e}`);
+        throw e;
       }
+    }
+
+    // 4. Init ggwave instance with exact AudioContext sample rate
+    if (ggwaveInstance < 0 && ggwaveModule) {
+      const params = ggwaveModule.getDefaultParameters();
+      (params as Record<string, unknown>)['sampleRateInp'] = actualRate;
+      (params as Record<string, unknown>)['sampleRateOut'] = actualRate;
+      ggwaveInstance = ggwaveModule.init(params);
     }
 
     // 5. Request wake lock
