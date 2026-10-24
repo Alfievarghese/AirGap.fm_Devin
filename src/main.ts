@@ -701,71 +701,68 @@ function renderAuthority(el: HTMLElement): void {
 
             <!-- SUBTAB 2: Custom Pager (EN / ML / HI) -->
             <div id="auth-tab-custom-content" style="${authActiveTab === 'custom' ? '' : 'display: none;'}">
-              <div class="flex justify-between items-center mb-4">
-                <label class="text-xs text-secondary font-bold uppercase tracking-wider">Custom Message (Max 6 Chars)</label>
-                <div id="pager-script-badge" class="badge">Max 6 Chars</div>
+              <div class="flex justify-between items-center mb-8">
+                <label class="font-bold text-primary" style="font-size: 14px; letter-spacing: 0.02em;">Custom Emergency Text</label>
+                <div id="pager-script-badge" class="badge badge-outline" style="font-size: 11px; padding: 3px 10px;">Max 6 Chars · ~1.2s Chirp</div>
               </div>
-              <p class="text-secondary mb-8" style="font-size: 11px; line-height: 1.4;">
-                Short acoustic words keep sound waves under ~1.1s so they transmit reliably without audio clutter.
-              </p>
 
-              <div class="mb-10">
+              <div class="mb-16">
                 <input 
                   type="text" 
                   id="custom-pager-input" 
                   maxlength="6" 
-                  placeholder="e.g. HELP, WATER, SOS, തീ" 
+                  placeholder="e.g. HELP, WATER, SOS, DEVIN" 
                   value="${customPagerText}" 
-                  style="font-size: 16px; font-family: var(--font-mono); padding: 10px 12px; width: 100%; border-radius: var(--radius-md); border: 1.5px solid var(--border-line);" 
+                  style="font-size: 18px; font-family: var(--font-mono); padding: 12px 14px; width: 100%; border-radius: var(--radius-md); border: 1.5px solid var(--border-line); letter-spacing: 0.03em;" 
                 />
-                <div class="flex justify-between items-center mt-6 text-xs text-secondary">
-                  <span id="pager-byte-counter" class="font-mono font-bold text-primary">0 / 6 Characters Used</span>
-                  <span class="text-muted">(14-Byte Fast Audio Frame)</span>
+                <div class="flex justify-between items-center mt-8 text-xs text-secondary">
+                  <span id="pager-byte-counter" class="font-mono font-bold text-primary" style="font-size: 12px;">0 / 6 Characters Used</span>
+                  <span class="text-muted" style="font-size: 12px;">14-Byte Fast Audio Frame (~1.2s)</span>
                 </div>
               </div>
 
               <!-- Quick Tokens Chips -->
-              <div class="mb-12">
-                <div class="text-xs text-secondary mb-6 font-bold uppercase tracking-wider">1-Tap Disaster Keywords (Auto-Translates EN / ML / HI):</div>
-                <div class="flex flex-wrap gap-6" id="pager-quick-chips">
-                  <button type="button" class="chip chip-pager font-bold" data-text="HELP">HELP (സഹായം / मदद)</button>
-                  <button type="button" class="chip chip-pager font-bold" data-text="WATER">WATER (വെള്ളം / पानी)</button>
-                  <button type="button" class="chip chip-pager font-bold" data-text="FIRE">FIRE (തീ / आग)</button>
-                  <button type="button" class="chip chip-pager font-bold" data-text="FOOD">FOOD (ഭക്ഷണം / खाना)</button>
-                  <button type="button" class="chip chip-pager font-bold" data-text="DOCTOR">DOCTOR (ഡോക്ടർ / डॉक्टर)</button>
-                  <button type="button" class="chip chip-pager font-bold" data-text="SOS">SOS (Emergency)</button>
-                  <button type="button" class="chip chip-pager font-bold" data-text="SAFE">SAFE (സുരക്ഷിതം)</button>
+              <div class="mb-16">
+                <div class="text-xs text-secondary mb-8 font-bold uppercase tracking-wider">Quick Disaster Keywords:</div>
+                <div class="flex flex-wrap gap-8" id="pager-quick-chips">
+                  <button type="button" class="chip chip-pager" data-text="HELP">HELP</button>
+                  <button type="button" class="chip chip-pager" data-text="WATER">WATER</button>
+                  <button type="button" class="chip chip-pager" data-text="FIRE">FIRE</button>
+                  <button type="button" class="chip chip-pager" data-text="FOOD">FOOD</button>
+                  <button type="button" class="chip chip-pager" data-text="DOCTOR">DOCTOR</button>
+                  <button type="button" class="chip chip-pager" data-text="SOS">SOS</button>
+                  <button type="button" class="chip chip-pager" data-text="SAFE">SAFE</button>
                 </div>
               </div>
 
               <!-- Trilingual Live Preview Card -->
-              <div class="p-12 mb-12" style="background: var(--bg-inset); border-radius: var(--radius-md); border: 1.5px solid var(--border-card); font-size: 13px; line-height: 1.5;">
-                <div class="flex justify-between items-center mb-8">
-                  <div class="text-xs font-mono font-bold text-secondary uppercase">Receiver Display Preview:</div>
+              <div class="p-16 mb-16" style="background: var(--bg-inset); border-radius: var(--radius-md); border: 1.5px solid var(--border-card); font-size: 13px; line-height: 1.5;">
+                <div class="flex justify-between items-center mb-10">
+                  <div class="text-xs font-mono font-bold text-secondary uppercase tracking-wider">Receiver Trilingual Preview:</div>
                   <span id="pager-orig-badge" class="badge">Waiting for input...</span>
                 </div>
 
-                <div id="pager-preview-mode-info" class="text-xs text-secondary mb-8 p-6" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
+                <div id="pager-preview-mode-info" class="text-xs text-secondary mb-12 p-8" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line); line-height: 1.5;">
                   Type a keyword above to preview what phones in the room will display.
                 </div>
 
-                <div class="grid gap-6">
-                  <div class="flex items-center gap-8 p-6" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
-                    <span class="chip font-mono font-bold" style="font-size: 10px; padding: 2px 6px;">EN</span>
-                    <span id="custom-preview-en" class="font-bold text-primary">—</span>
+                <div class="grid gap-8">
+                  <div class="flex items-center gap-12 p-8" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
+                    <span class="chip font-mono font-bold" style="font-size: 11px; padding: 3px 8px; min-width: 32px; justify-content: center;">EN</span>
+                    <span id="custom-preview-en" class="font-bold text-primary" style="font-size: 15px;">—</span>
                   </div>
-                  <div class="flex items-center gap-8 p-6" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
-                    <span class="chip font-mono font-bold" style="font-size: 10px; padding: 2px 6px;">ML</span>
-                    <span id="custom-preview-ml" class="font-bold text-patina">—</span>
+                  <div class="flex items-center gap-12 p-8" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
+                    <span class="chip font-mono font-bold" style="font-size: 11px; padding: 3px 8px; min-width: 32px; justify-content: center; background: var(--color-emerald-subtle); color: var(--color-emerald); border-color: var(--color-emerald-border);">ML</span>
+                    <span id="custom-preview-ml" class="font-bold text-patina" style="font-size: 15px;">—</span>
                   </div>
-                  <div class="flex items-center gap-8 p-6" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
-                    <span class="chip font-mono font-bold" style="font-size: 10px; padding: 2px 6px;">HI</span>
-                    <span id="custom-preview-hi" class="font-bold text-secondary">—</span>
+                  <div class="flex items-center gap-12 p-8" style="background: #ffffff; border-radius: var(--radius-xs); border: 1px solid var(--border-line);">
+                    <span class="chip font-mono font-bold" style="font-size: 11px; padding: 3px 8px; min-width: 32px; justify-content: center; background: rgba(30, 58, 138, 0.08); color: #1e40af; border-color: rgba(30, 58, 138, 0.25);">HI</span>
+                    <span id="custom-preview-hi" class="font-bold text-secondary" style="font-size: 15px;">—</span>
                   </div>
                 </div>
               </div>
 
-              <button class="btn btn-danger w-full mt-12" id="auth-broadcast-custom-btn" ${isAuthorityBroadcasting ? 'disabled' : ''}>
+              <button class="btn btn-danger w-full" id="auth-broadcast-custom-btn" style="padding: 13px 20px; font-size: 15px; font-weight: 700; gap: 8px;" ${isAuthorityBroadcasting ? 'disabled' : ''}>
                 ${ICONS.broadcast}
                 <span id="auth-custom-btn-text">
                   ${authTargetType === 'broadcast'
@@ -863,8 +860,9 @@ function renderAuthority(el: HTMLElement): void {
     customPagerText = val.slice(0, 6);
     const { scriptId } = encodeIndicString(customPagerText, 5);
     const charLen = customPagerText.length;
-    pagerCounter.textContent = `${charLen} / 6 Characters Used`;
-    pagerBadge.textContent = `${getScriptLabel(scriptId)} · ${6 - charLen} left`;
+    pagerCounter.textContent = `${charLen} of 6 characters`;
+    const scriptName = scriptId === ScriptId.MALAYALAM ? 'Malayalam' : scriptId === ScriptId.HINDI ? 'Devanagari' : 'ASCII';
+    pagerBadge.textContent = `${6 - charLen} left (${scriptName})`;
 
     const modeInfo = el.querySelector('#pager-preview-mode-info') as HTMLElement;
 
