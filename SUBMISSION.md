@@ -5,7 +5,7 @@
 - **Project name:** AirGap.fm
 - **Short description:** A zero-infrastructure, browser-native acoustic mesh emergency alert transceiver. Operates over near-ultrasonic and audible FSK sound waves (1.8–6.3 kHz) to relay cryptographically authenticated emergency alerts across smartphones with zero internet, zero cellular towers, and zero Bluetooth. Features custom 1-byte Indic Unicode compression for Malayalam and Hindi (saving 66% airtime), targeted 1-byte unicast device routing with relay suppression, 32-bit HMAC cryptographic verification, and real-time 3D acoustic spectrum visualization.
 - **Code repository URL:** https://github.com/AlfieVarghese/AirGap.fm_Devin.git
-- **Final submitted implementation commit SHA:** f928b9a
+- **Final submitted implementation commit SHA:** d272607
 - **Working demo URL or local demo steps:** Local acoustic transceiver running via `npm run dev` at `http://localhost:5173/`. Dual devices or browser tabs can transmit and receive emergency FSK acoustic chirps across the room.
 - **Demo access requirements:** Modern browser (Chrome, Edge, Safari, Firefox) with microphone permissions enabled. No external cloud credentials or API keys needed. Demo authority PIN is `1234`.
 
