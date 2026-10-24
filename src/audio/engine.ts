@@ -349,13 +349,25 @@ export class AudioEngine {
       return;
     }
 
-    // Play waveform
+    // Play waveform with smooth attack and decay envelope to prevent harsh speaker clipping
     const buffer = this.ctx.createBuffer(1, waveform.length, this.ctx.sampleRate);
     buffer.getChannelData(0).set(waveform);
     const source = this.ctx.createBufferSource();
     source.buffer = buffer;
-    source.connect(this.ctx.destination);
-    source.start();
+
+    const gainNode = this.ctx.createGain();
+    const now = this.ctx.currentTime;
+    const duration = waveform.length / this.ctx.sampleRate;
+
+    // Smooth 15ms fade-in and 25ms fade-out
+    gainNode.gain.setValueAtTime(0.001, now);
+    gainNode.gain.exponentialRampToValueAtTime(1.0, now + 0.015);
+    gainNode.gain.setValueAtTime(1.0, now + Math.max(0.015, duration - 0.025));
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    source.connect(gainNode);
+    gainNode.connect(this.ctx.destination);
+    source.start(now);
 
     // Wait for playback to finish, then cooldown
     const durationMs = (waveform.length / this.ctx.sampleRate) * 1000;

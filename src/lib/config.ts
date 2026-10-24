@@ -55,7 +55,7 @@ export const DEFAULT_CONFIG: RelayConfig = {
   authorityRepeatSpacing: [3000, 5000],
   alertExpiryMs: 10 * 60 * 1000,
   ggwaveProtocol: 'GGWAVE_PROTOCOL_AUDIBLE_FAST',
-  ggwaveVolume: 50,
+  ggwaveVolume: 35,
   sampleRate: 48000,
 };
 
