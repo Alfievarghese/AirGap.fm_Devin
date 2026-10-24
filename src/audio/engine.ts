@@ -26,6 +26,7 @@ export class AudioEngine {
   private micStream: MediaStream | null = null;
   private sourceNode: MediaStreamAudioSourceNode | null = null;
   private processorNode: ScriptProcessorNode | null = null;
+  private workletNode: AudioWorkletNode | null = null;
   private state: AudioState = 'IDLE';
   private callbacks: AudioEngineCallbacks;
   private config: RelayConfig;
@@ -214,6 +215,7 @@ export class AudioEngine {
         URL.revokeObjectURL(blobUrl);
 
         const workletNode = new AudioWorkletNode(this.ctx, 'ggwave-capture-processor');
+        this.workletNode = workletNode;
         let micAccumulator = new Float32Array(4096);
         let micAccIdx = 0;
 
@@ -286,6 +288,56 @@ export class AudioEngine {
     }
 
     this.setState('LISTEN');
+  }
+
+  /**
+   * Stop listening and release microphone stream.
+   * Resets audio state to IDLE and stops VU level reporting.
+   */
+  stopListening(): void {
+    if (this.levelInterval) {
+      clearInterval(this.levelInterval);
+      this.levelInterval = null;
+    }
+
+    if (this.workletNode) {
+      try {
+        this.workletNode.disconnect();
+      } catch {
+        // ignore
+      }
+      this.workletNode = null;
+    }
+
+    if (this.processorNode) {
+      try {
+        this.processorNode.disconnect();
+      } catch {
+        // ignore
+      }
+      this.processorNode = null;
+    }
+
+    if (this.sourceNode) {
+      try {
+        this.sourceNode.disconnect();
+      } catch {
+        // ignore
+      }
+      this.sourceNode = null;
+    }
+
+    if (this.micStream) {
+      try {
+        this.micStream.getTracks().forEach((track) => track.stop());
+      } catch {
+        // ignore
+      }
+      this.micStream = null;
+    }
+
+    this.setState('IDLE');
+    this.callbacks.onLevelChange?.(0);
   }
 
   private lastTxTimestamp = 0;

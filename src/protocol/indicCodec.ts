@@ -88,7 +88,7 @@ export function getScriptLabel(scriptId: ScriptId): string {
  */
 export function encodeIndicString(
   text: string,
-  maxBytes = 6
+  maxBytes = 7
 ): { scriptId: ScriptId; bytes: Uint8Array } {
   const scriptId = detectScript(text);
   const out: number[] = [];

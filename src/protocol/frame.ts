@@ -72,8 +72,10 @@ export interface BeaconFrame {
 /** Encode a BeaconFrame into a 14-byte Uint8Array */
 export function encodeFrame(frame: BeaconFrame): Uint8Array {
   const isCustom = frame.type === FrameType.CUSTOM_PAGER;
-  const payloadLen = 5;
-  const size = FRAME_SIZE;
+  const payloadLen = isCustom
+    ? Math.max(5, Math.min(7, frame.customPayload?.length ?? 5))
+    : 5;
+  const size = isCustom ? 4 + payloadLen + 5 : FRAME_SIZE;
   const buf = new Uint8Array(size);
 
   const scriptId = frame.scriptId ?? ScriptId.ASCII;

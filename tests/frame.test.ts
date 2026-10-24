@@ -99,6 +99,52 @@ describe('Frame encode/decode: FrameType 1 (CUSTOM_PAGER 14B Unicast)', () => {
     expect(decoded!.ttl).toBe(frame.ttl);
     expect(decoded!.mac).toEqual(frame.mac);
   });
+
+  it('preserves full 6-letter words without dropping ending letters (e.g. DOCTOR)', () => {
+    // ASCII encoding for "DOCTOR" (charCode - 0x20):
+    // 'D': 68 - 32 = 36
+    // 'O': 79 - 32 = 47
+    // 'C': 67 - 32 = 35
+    // 'T': 84 - 32 = 52
+    // 'O': 79 - 32 = 47
+    // 'R': 82 - 32 = 50
+    const doctorBytes = new Uint8Array([36, 47, 35, 52, 47, 50]);
+    const frame = makeCustomFrame({
+      scriptId: ScriptId.ASCII,
+      customPayload: doctorBytes,
+    });
+    const buf = encodeFrame(frame);
+    expect(buf.length).toBe(15);
+
+    const decoded = decodeFrame(buf);
+    expect(decoded).not.toBeNull();
+    expect(decoded!.customPayload?.length).toBe(6);
+    expect(decoded!.customText).toBe('DOCTOR');
+  });
+
+  it('preserves full 7-letter words without dropping ending letters (e.g. SHELTER)', () => {
+    // "SHELTER" -> 7 bytes
+    const shelterBytes = new Uint8Array([
+      'S'.charCodeAt(0) - 32,
+      'H'.charCodeAt(0) - 32,
+      'E'.charCodeAt(0) - 32,
+      'L'.charCodeAt(0) - 32,
+      'T'.charCodeAt(0) - 32,
+      'E'.charCodeAt(0) - 32,
+      'R'.charCodeAt(0) - 32,
+    ]);
+    const frame = makeCustomFrame({
+      scriptId: ScriptId.ASCII,
+      customPayload: shelterBytes,
+    });
+    const buf = encodeFrame(frame);
+    expect(buf.length).toBe(16);
+
+    const decoded = decodeFrame(buf);
+    expect(decoded).not.toBeNull();
+    expect(decoded!.customPayload?.length).toBe(7);
+    expect(decoded!.customText).toBe('SHELTER');
+  });
 });
 
 describe('Immutable bytes & MAC protection', () => {

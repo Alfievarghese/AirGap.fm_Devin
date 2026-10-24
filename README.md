@@ -8,10 +8,6 @@ One phone chirps, every phone in the room lights up and passes it on, with no in
 
 Live demo: https://airgap-fm.vercel.app
 
-Demo video: [DEMO LINK]
-
-QR code for phone demo: [QR CODE]
-
 ## Try it in 60 seconds
 
 1. Open https://airgap-fm.vercel.app on Phone A and Phone B in any browser.

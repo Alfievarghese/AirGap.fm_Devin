@@ -395,8 +395,8 @@ function renderListener(el: HTMLElement): void {
           <!-- Calibrated Decibel VU Meter -->
           <div class="vu-meter-housing">
             <div class="vu-meter-top">
-              <span>ACOUSTIC SPECTRUM INPUT ENERGY</span>
-              <span id="listener-level-db" class="vu-meter-db-readout">-60 dB · QUIET</span>
+              <span class="vu-meter-label">INPUT ENERGY</span>
+              <span id="listener-level-db" class="vu-meter-db-readout">-48 dB · QUIET</span>
             </div>
             <div class="vu-meter-track">
               <div class="vu-meter-bar" id="listener-level-fill"></div>
@@ -412,9 +412,9 @@ function renderListener(el: HTMLElement): void {
 
           <!-- Hardware Action Controls -->
           <div class="flex flex-col gap-10 mt-16">
-            <button class="btn-transceiver-primary" id="listener-toggle-btn">
+            <button class="btn-transceiver-primary${currentState === 'LISTEN' ? ' btn-listening-active' : ''}" id="listener-toggle-btn">
               ${ICONS.mic}
-              <span id="listener-toggle-text">${currentState === 'LISTEN' ? 'Listening Active · Armed for Chirps' : 'Start Acoustic Listener'}</span>
+              <span id="listener-toggle-text">${currentState === 'LISTEN' ? 'Stop Acoustic Listener' : 'Start Acoustic Listener'}</span>
             </button>
           </div>
         </div>
@@ -542,7 +542,11 @@ function renderListener(el: HTMLElement): void {
     await initAudio();
     await initRelay();
     if (audioEngine) {
-      if (audioEngine.getState() === 'IDLE') {
+      if (audioEngine.getState() === 'LISTEN') {
+        audioEngine.stopListening();
+        spectrogram.stop();
+        globalAcousticMesh3D.stop();
+      } else {
         await audioEngine.startListening();
         if (listenerVisualMode === 'waterfall') {
           spectrogram.start('listener-waterfall-canvas', audioEngine.getAnalyser());
@@ -703,21 +707,21 @@ function renderAuthority(el: HTMLElement): void {
             <div id="auth-tab-custom-content" style="${authActiveTab === 'custom' ? '' : 'display: none;'}">
               <div class="flex justify-between items-center mb-8">
                 <label class="font-bold text-primary" style="font-size: 14px; letter-spacing: 0.02em;">Custom Emergency Text</label>
-                <div id="pager-script-badge" class="badge badge-outline" style="font-size: 11px; padding: 3px 10px;">Max 6 Chars · ~1.2s Chirp</div>
+                <div id="pager-script-badge" class="badge badge-outline" style="font-size: 11px; padding: 3px 10px;">Max 7 Chars · ~1.2s Chirp</div>
               </div>
 
               <div class="mb-16">
                 <input 
                   type="text" 
                   id="custom-pager-input" 
-                  maxlength="6" 
-                  placeholder="e.g. HELP, WATER, SOS, DEVIN" 
+                  maxlength="7" 
+                  placeholder="e.g. DOCTOR, WATER, FLOODS, DEVIN" 
                   value="${customPagerText}" 
                   style="font-size: 18px; font-family: var(--font-mono); padding: 12px 14px; width: 100%; border-radius: var(--radius-md); border: 1.5px solid var(--border-line); letter-spacing: 0.03em;" 
                 />
                 <div class="flex justify-between items-center mt-8 text-xs text-secondary">
-                  <span id="pager-byte-counter" class="font-mono font-bold text-primary" style="font-size: 12px;">0 / 6 Characters Used</span>
-                  <span class="text-muted" style="font-size: 12px;">14-Byte Fast Audio Frame (~1.2s)</span>
+                  <span id="pager-byte-counter" class="font-mono font-bold text-primary" style="font-size: 12px;">0 / 7 Characters Used</span>
+                  <span class="text-muted" style="font-size: 12px;">Fast Acoustic Frame (~1.2s)</span>
                 </div>
               </div>
 
@@ -857,12 +861,12 @@ function renderAuthority(el: HTMLElement): void {
   const customHi = el.querySelector('#custom-preview-hi') as HTMLElement;
 
   const updatePagerPreview = (val: string) => {
-    customPagerText = val.slice(0, 6);
-    const { scriptId } = encodeIndicString(customPagerText, 5);
+    customPagerText = val.slice(0, 7);
+    const { scriptId } = encodeIndicString(customPagerText, 7);
     const charLen = customPagerText.length;
-    pagerCounter.textContent = `${charLen} of 6 characters`;
+    pagerCounter.textContent = `${charLen} of 7 characters`;
     const scriptName = scriptId === ScriptId.MALAYALAM ? 'Malayalam' : scriptId === ScriptId.HINDI ? 'Devanagari' : 'ASCII';
-    pagerBadge.textContent = `${6 - charLen} left (${scriptName})`;
+    pagerBadge.textContent = `${7 - charLen} left (${scriptName})`;
 
     const modeInfo = el.querySelector('#pager-preview-mode-info') as HTMLElement;
 
@@ -1824,9 +1828,9 @@ function handleLevel(level: number): void {
 
   const dbText = document.getElementById('listener-level-db');
   if (dbText) {
-    if (pct < 5) dbText.textContent = 'QUIET ROOM';
-    else if (pct < 35) dbText.textContent = 'FSK ENERGY DETECTED';
-    else dbText.textContent = 'HIGH AUDIO LEVEL';
+    if (pct < 5) dbText.textContent = '-48 dB · QUIET';
+    else if (pct < 35) dbText.textContent = '-18 dB · ACTIVE';
+    else dbText.textContent = '-4 dB · PEAK';
   }
 }
 
@@ -1919,12 +1923,14 @@ async function sendCustomPagerBeacon(
   if (!audioEngine) return;
 
   const alertId = Math.floor(Math.random() * 0xffff);
-  const { scriptId, bytes } = encodeIndicString(text, 5);
+  const { scriptId, bytes } = encodeIndicString(text, 7);
 
-  // Pad to 5 bytes for 14-byte frame layout
-  const padded = new Uint8Array(5);
-  for (let i = 0; i < 5; i++) {
-    padded[i] = i < bytes.length ? bytes[i] : (scriptId === ScriptId.ASCII ? 0x00 : 0x80);
+  // Pad to at least 5 bytes (14B frame) or keep 6-7 bytes (15-16B frame)
+  const payloadLen = Math.max(5, bytes.length);
+  const padded = new Uint8Array(payloadLen);
+  padded.set(bytes);
+  if (bytes.length < payloadLen) {
+    padded.fill(scriptId === ScriptId.ASCII ? 0x00 : 0x80, bytes.length);
   }
 
   const frame: BeaconFrame = {
@@ -2140,9 +2146,17 @@ function updateUIStatus(): void {
   if (listenerPill) {
     listenerPill.className = `status-badge status-${state.toLowerCase()}`;
   }
+  const toggleBtn = document.getElementById('listener-toggle-btn');
   const toggleBtnText = document.getElementById('listener-toggle-text');
   if (toggleBtnText) {
-    toggleBtnText.textContent = state === 'LISTEN' ? 'Listening Active' : 'Start Acoustic Mesh';
+    toggleBtnText.textContent = state === 'LISTEN' ? 'Stop Acoustic Listener' : 'Start Acoustic Listener';
+  }
+  if (toggleBtn) {
+    if (state === 'LISTEN') {
+      toggleBtn.classList.add('btn-listening-active');
+    } else {
+      toggleBtn.classList.remove('btn-listening-active');
+    }
   }
 
   const labStatus = document.getElementById('lab-status');
