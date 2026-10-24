@@ -16,7 +16,7 @@ QR code for phone demo: [QR CODE]
 
 1. Open [LIVE URL] on Phone A and Phone B in any browser.
 2. On Phone A, tap Start Acoustic Listener to turn on the microphone.
-3. On Phone B, open Authority and type demo code 1234.
+3. On Phone B, open Sender (TX).
 4. On Phone B, tap Broadcast Emergency Beacon.
 5. Phone B plays a short chirp. Phone A hears it, flashes bright green, and displays the message.
 

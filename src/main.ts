@@ -223,15 +223,7 @@ function render(): void {
         </button>
         <button class="nav-tab ${currentScreen === 'wall' ? 'active' : ''}" data-screen="wall">
           ${ICONS.wall}
-          <span>Wall</span>
-        </button>
-        <button class="nav-tab ${currentScreen === 'lab' ? 'active' : ''}" data-screen="lab">
-          ${ICONS.lab}
-          <span>Lab</span>
-        </button>
-        <button class="nav-tab ${currentScreen === 'sim' ? 'active' : ''}" data-screen="sim">
-          ${ICONS.sim}
-          <span>Sim</span>
+          <span>The Wall</span>
         </button>
       </nav>
     </div>
@@ -424,16 +416,6 @@ function renderListener(el: HTMLElement): void {
               ${ICONS.mic}
               <span id="listener-toggle-text">${currentState === 'LISTEN' ? 'Listening Active · Armed for Chirps' : 'Start Acoustic Listener'}</span>
             </button>
-            <div class="flex gap-8">
-              <button class="btn-transceiver-secondary flex-1" id="listener-test-tone" title="Play audible audio chirp">
-                ${ICONS.speaker}
-                <span>Play Test Chirp (0.8s)</span>
-              </button>
-              <button class="btn-transceiver-secondary flex-1" id="listener-sim-alert" title="Simulate incoming alert wave">
-                ${ICONS.broadcast}
-                <span>Simulate Inbound Wave</span>
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -571,26 +553,6 @@ function renderListener(el: HTMLElement): void {
       updateUIStatus();
     }
   });
-
-  el.querySelector('#listener-test-tone')!.addEventListener('click', async () => {
-    if (!audioEngine) await initAudio();
-    audioEngine?.playTestTone();
-  });
-
-  // Simulate Inbound Wave for live judge/user testing
-  el.querySelector('#listener-sim-alert')?.addEventListener('click', async () => {
-    triggerScreenFlash('emerald', 'EVACUATE BUILDING', 'HOP 1 · HMAC VERIFIED · RELAYING WAVE');
-    globalAcousticMesh3D.triggerShockwave('#10b981');
-    const alertCard = el.querySelector('#listener-alert-card') as HTMLElement;
-    if (alertCard) {
-      alertCard.style.display = 'block';
-      el.querySelector('#listener-alert-text')!.textContent = 'EVACUATE IMMEDIATELY (FIRE HAZARD)';
-      el.querySelector('#listener-hop-val')!.textContent = '1';
-      el.querySelector('#listener-alert-id')!.textContent = '0x0001';
-    }
-    if (!audioEngine) await initAudio();
-    audioEngine?.playTestTone();
-  });
 }
 
 
@@ -613,31 +575,26 @@ function renderAuthority(el: HTMLElement): void {
     <div class="cockpit-grid">
       <!-- Left Column: Authorization & 3D Key Anchor -->
       <div>
-        <!-- Security Keypad Card -->
+        <!-- Transmitter Status Card -->
         <div class="card">
-          <div class="flex justify-between items-center">
-            <div class="card-title" style="margin-bottom: 0;">
-              ${ICONS.authority}
-              <span>Origin Authorization PIN</span>
+          <div class="card-title" style="margin-bottom: 0;">
+            ${ICONS.authority}
+            <span>Transmitter Status</span>
+          </div>
+          <div class="flex flex-col gap-8 mt-12">
+            <div class="flex justify-between items-center p-8" style="background: var(--bg-inset); border-radius: var(--radius-sm); border: 1px solid var(--border-line);">
+              <span class="text-xs text-secondary font-bold">MY NODE ADDRESS</span>
+              <span class="chip font-mono text-cyan">#${toHexId(myNodeId)}</span>
             </div>
-            <button class="chip" id="auth-quick-pin">Fill Demo 1234</button>
+            <div class="flex justify-between items-center p-8" style="background: var(--bg-inset); border-radius: var(--radius-sm); border: 1px solid var(--border-line);">
+              <span class="text-xs text-secondary font-bold">CARRIER BAND</span>
+              <span class="text-xs font-mono font-bold text-primary">1.8 - 6.3 kHz Audible FSK</span>
+            </div>
+            <div class="flex justify-between items-center p-8" style="background: var(--bg-inset); border-radius: var(--radius-sm); border: 1px solid var(--border-line);">
+              <span class="text-xs text-secondary font-bold">FRAME SPEC</span>
+              <span class="text-xs font-mono font-bold text-patina">14 Bytes · ~1.1s Airtime</span>
+            </div>
           </div>
-
-          <div class="pin-display">
-            <div class="pin-digit ${authPinInput.length > 0 ? 'active' : ''}">${authPinInput[0] ? '•' : ''}</div>
-            <div class="pin-digit ${authPinInput.length > 1 ? 'active' : ''}">${authPinInput[1] ? '•' : ''}</div>
-            <div class="pin-digit ${authPinInput.length > 2 ? 'active' : ''}">${authPinInput[2] ? '•' : ''}</div>
-            <div class="pin-digit ${authPinInput.length > 3 ? 'active' : ''}">${authPinInput[3] ? '•' : ''}</div>
-          </div>
-
-          <input 
-            type="password" 
-            id="auth-pin" 
-            maxlength="4" 
-            placeholder="Enter 4 digit PIN" 
-            value="${authPinInput}" 
-            style="text-align: center; letter-spacing: 4px; font-family: var(--font-mono); font-size: 16px;" 
-          />
         </div>
 
         <!-- 3D Acoustic Security Hologram -->
@@ -927,27 +884,6 @@ function renderAuthority(el: HTMLElement): void {
     });
   });
 
-  // Security Keypad Handlers
-  const pinInput = el.querySelector('#auth-pin') as HTMLInputElement;
-  pinInput.addEventListener('input', () => {
-    authPinInput = pinInput.value;
-    const digits = el.querySelectorAll('.pin-digit');
-    digits.forEach((d, idx) => {
-      d.textContent = authPinInput[idx] ? '•' : '';
-      if (authPinInput.length > idx) {
-        d.classList.add('active');
-      } else {
-        d.classList.remove('active');
-      }
-    });
-  });
-
-  el.querySelector('#auth-quick-pin')!.addEventListener('click', () => {
-    authPinInput = '1234';
-    pinInput.value = '1234';
-    pinInput.dispatchEvent(new Event('input'));
-  });
-
   // Target Destination Selector Events
   bindTargetSelectorEvents(
     el,
@@ -961,11 +897,6 @@ function renderAuthority(el: HTMLElement): void {
 
   // Broadcast Instant Alert
   el.querySelector('#auth-broadcast-btn')!.addEventListener('click', async () => {
-    if (authPinInput !== '1234') {
-      alert('Authentication required. Enter demo PIN: 1234');
-      return;
-    }
-
     const targetNodeId = resolveTargetNodeId(authTargetType, authCustomTargetHex);
 
     isAuthorityBroadcasting = true;
@@ -984,13 +915,8 @@ function renderAuthority(el: HTMLElement): void {
 
   // Broadcast Custom Pager Chirp
   el.querySelector('#auth-broadcast-custom-btn')!.addEventListener('click', async () => {
-    if (authPinInput !== '1234') {
-      alert('Authentication required. Enter demo PIN: 1234');
-      return;
-    }
-
     if (!customPagerText.trim()) {
-      alert('Please enter emergency pager text first (e.g. സഹായം or WATER)');
+      alert('Please enter pager text first (e.g. HELP, WATER, or Malayalam)');
       return;
     }
 
