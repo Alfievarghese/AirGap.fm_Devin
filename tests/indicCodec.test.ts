@@ -116,4 +116,20 @@ describe('Offline Trilingual Emergency Lexer & ISCII Transliteration', () => {
     expect(out.charCodeAt(0)).toBeGreaterThanOrEqual(0x0900);
     expect(out.charCodeAt(0)).toBeLessThanOrEqual(0x097f);
   });
+
+  it('phonetically transliterates Roman English words into Malayalam and Hindi script', () => {
+    // Devin -> Malayalam script & Devanagari script
+    const mlDevin = transliterateISCII('devin', ScriptId.ASCII, 'ml');
+    expect(mlDevin).toBe('ഡെവിൻ');
+
+    const hiDevin = transliterateISCII('devin', ScriptId.ASCII, 'hi');
+    expect(hiDevin).toBe('डेविन');
+
+    // Devin Ai -> Malayalam & Hindi
+    const resMl = translateCustomText('Devin Ai', ScriptId.ASCII, 'ml');
+    expect(resMl.translatedText).toContain('ഡെവിൻ');
+
+    const resHi = translateCustomText('Devin Ai', ScriptId.ASCII, 'hi');
+    expect(resHi.translatedText).toContain('डेविन');
+  });
 });

@@ -873,29 +873,41 @@ function renderAuthority(el: HTMLElement): void {
       const tMl = translateCustomText(customPagerText, scriptId, 'ml');
       const tHi = translateCustomText(customPagerText, scriptId, 'hi');
       const isDict = tEn.isDictionaryMatch || tMl.isDictionaryMatch || tHi.isDictionaryMatch;
+      const isTrans = Boolean(tMl.isTransliterated || tHi.isTransliterated);
 
       if (isDict) {
         pagerOrigBadge.className = 'badge';
         pagerOrigBadge.style.cssText = 'background: var(--color-emerald-subtle); color: var(--color-emerald); border: 1px solid var(--color-emerald-border); font-weight: 700;';
-        pagerOrigBadge.textContent = 'Auto-Translation Active';
+        pagerOrigBadge.textContent = 'Dictionary Translation';
 
         if (modeInfo) {
-          modeInfo.innerHTML = `<strong>Dictionary Match:</strong> Receiving phones will automatically display this alert in their selected language.`;
+          modeInfo.innerHTML = `<strong>Verified Translation:</strong> Receiving phones will automatically display this alert in their native language.`;
         }
         customEn.textContent = tEn.translatedText || customPagerText;
         customMl.textContent = tMl.translatedText || customPagerText;
         customHi.textContent = tHi.translatedText || customPagerText;
+      } else if (isTrans) {
+        pagerOrigBadge.className = 'badge';
+        pagerOrigBadge.style.cssText = 'background: rgba(30, 58, 138, 0.08); color: #1e40af; border: 1px solid rgba(30, 58, 138, 0.25); font-weight: 700;';
+        pagerOrigBadge.textContent = 'Phonetic Script';
+
+        if (modeInfo) {
+          modeInfo.innerHTML = `<strong>Phonetic Transliteration:</strong> Rendered into Malayalam & Devanagari phonetic script so receivers read names in local scripts.`;
+        }
+        customEn.textContent = customPagerText;
+        customMl.textContent = tMl.translatedText;
+        customHi.textContent = tHi.translatedText;
       } else {
         pagerOrigBadge.className = 'badge';
         pagerOrigBadge.style.cssText = 'background: var(--bg-subtle); color: var(--text-secondary); border: 1px solid var(--border-card); font-weight: 700;';
-        pagerOrigBadge.textContent = 'Custom Exact Text';
+        pagerOrigBadge.textContent = 'Raw Text';
 
         if (modeInfo) {
-          modeInfo.innerHTML = `<strong>Raw Custom Message:</strong> Not in disaster dictionary. Receiving phones will display <strong>"${customPagerText}"</strong> as typed.`;
+          modeInfo.innerHTML = `<strong>Raw Custom Message:</strong> Receiving phones will display <strong>"${customPagerText}"</strong> as typed.`;
         }
         customEn.textContent = customPagerText;
-        customMl.textContent = `${customPagerText} (As Typed)`;
-        customHi.textContent = `${customPagerText} (As Typed)`;
+        customMl.textContent = customPagerText;
+        customHi.textContent = customPagerText;
       }
     } else {
       pagerOrigBadge.className = 'badge badge-outline';

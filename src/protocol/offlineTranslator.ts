@@ -158,6 +158,9 @@ export const EMERGENCY_DICTIONARY: [string, string, string][] = [
   ['ok', 'ശരി', 'ठीक'],
   ['please', 'ദയവായി', 'कृपया'],
   ['thanks', 'നന്ദി', 'धन्यवाद'],
+  ['devin', 'ഡെവിൻ', 'डेविन'],
+  ['ai', 'എഐ', 'एआई'],
+  ['devin ai', 'ഡെവിൻ എഐ', 'डेविन एआई'],
 ];
 
 /** Fast lookup hash maps for dictionary translation */
@@ -333,8 +336,192 @@ export function transliterateISCII(
     return out || text;
   }
 
-  // 3. English -> Indic (Phonetic simple fallback if not in dictionary)
+  // 3. English -> Indic (Phonetic Romanization to Malayalam & Devanagari)
+  if (fromScript === ScriptId.ASCII && (toLang === 'ml' || toLang === 'hi')) {
+    return transliterateEnglishToIndic(text, toLang);
+  }
+
   return text;
+}
+
+/**
+ * Phonetic Roman English to Indic (Malayalam / Hindi) Transliterator.
+ * Transliterates names, call signs, and out-of-vocabulary emergency words into Malayalam and Devanagari script.
+ */
+export function transliterateEnglishToIndic(text: string, toLang: 'ml' | 'hi'): string {
+  if (!text) return text;
+
+  const VOWELS: Record<string, { mlInd: string; mlMat: string; hiInd: string; hiMat: string }> = {
+    aa: { mlInd: '\u0D06', mlMat: '\u0D3E', hiInd: '\u0906', hiMat: '\u093E' }, // ആ / ാ / आ / ा
+    ai: { mlInd: '\u0D10', mlMat: '\u0D48', hiInd: '\u0910', hiMat: '\u0948' }, // ഐ / ൈ / ऐ / ै
+    au: { mlInd: '\u0D14', mlMat: '\u0D57', hiInd: '\u0914', hiMat: '\u094C' }, // ഔ / ൗ / औ / ौ
+    ee: { mlInd: '\u0D08', mlMat: '\u0D40', hiInd: '\u0908', hiMat: '\u0940' }, // ഈ / ീ / ई / ी
+    oo: { mlInd: '\u0D0A', mlMat: '\u0D42', hiInd: '\u090A', hiMat: '\u0942' }, // ഊ / ൂ / ऊ / ू
+    ie: { mlInd: '\u0D08', mlMat: '\u0D40', hiInd: '\u0908', hiMat: '\u0940' }, // ഈ / ീ / ई / ी
+    a:  { mlInd: '\u0D05', mlMat: '',       hiInd: '\u0905', hiMat: '' },       // അ / inherent / अ / inherent
+    i:  { mlInd: '\u0D07', mlMat: '\u0D3F', hiInd: '\u0907', hiMat: '\u093F' }, // ഇ / ി / इ / ि
+    u:  { mlInd: '\u0D09', mlMat: '\u0D41', hiInd: '\u0909', hiMat: '\u0941' }, // ഉ / ു / उ / ु
+    e:  { mlInd: '\u0D0E', mlMat: '\u0D46', hiInd: '\u090E', hiMat: '\u0947' }, // എ / െ / ए / े
+    o:  { mlInd: '\u0D12', mlMat: '\u0D4A', hiInd: '\u0912', hiMat: '\u094B' }, // ഒ / ൊ / ओ / ो
+  };
+
+  const CONSONANTS: Record<string, { ml: string; hi: string; mlChillu?: string }> = {
+    // 3-char
+    chh: { ml: '\u0D1B', hi: '\u091B' }, // ഛ / छ
+    // 2-char
+    kh: { ml: '\u0D16', hi: '\u0916' },  // ഖ / ख
+    gh: { ml: '\u0D18', hi: '\u0918' },  // ഘ / घ
+    ch: { ml: '\u0D1A', hi: '\u091A' },  // ച / च
+    jh: { ml: '\u0D1D', hi: '\u091D' },  // ഝ / झ
+    th: { ml: '\u0D24', hi: '\u0925' },  // ത / थ
+    dh: { ml: '\u0D27', hi: '\u0927' },  // ധ / ध
+    ph: { ml: '\u0D2B', hi: '\u092B' },  // ഫ / फ
+    bh: { ml: '\u0D2D', hi: '\u092D' },  // ഭ / भ
+    sh: { ml: '\u0D36', hi: '\u0936' },  // ശ / श
+    zh: { ml: '\u0D34', hi: '\u091C\u093C' }, // ഴ / ज़
+    ng: { ml: '\u0D19', hi: '\u0919' },  // ങ / ङ
+    ny: { ml: '\u0D1E', hi: '\u091E' },  // ഞ / ञ
+    // 1-char
+    k: { ml: '\u0D15', hi: '\u0915', mlChillu: '\u0D7F' }, // ക / क
+    g: { ml: '\u0D17', hi: '\u0917' },  // ഗ / ग
+    c: { ml: '\u0D15', hi: '\u0915' },  // ക / क
+    j: { ml: '\u0D1C', hi: '\u091C' },  // ജ / ज
+    t: { ml: '\u0D1F', hi: '\u091F' },  // ട / ट
+    d: { ml: '\u0D21', hi: '\u0921' },  // ഡ / ड
+    n: { ml: '\u0D28', hi: '\u0928', mlChillu: '\u0D7B' }, // ന / न (chillu ൻ)
+    p: { ml: '\u0D2A', hi: '\u092A' },  // പ / प
+    f: { ml: '\u0D2B', hi: '\u092B\u093C' }, // ഫ / फ़
+    b: { ml: '\u0D2C', hi: '\u092C' },  // ബ / ब
+    m: { ml: '\u0D2E', hi: '\u092E', mlChillu: '\u0D02' }, // മ / म (anusvara ം)
+    y: { ml: '\u0D2F', hi: '\u092F' },  // യ / य
+    r: { ml: '\u0D30', hi: '\u0930', mlChillu: '\u0D7C' }, // ര / र (chillu ർ)
+    l: { ml: '\u0D32', hi: '\u0932', mlChillu: '\u0D7D' }, // ല / ल (chillu ൽ)
+    v: { ml: '\u0D35', hi: '\u0935' },  // വ / व
+    w: { ml: '\u0D35', hi: '\u0935' },  // വ / व
+    s: { ml: '\u0D38', hi: '\u0938' },  // സ / स
+    h: { ml: '\u0D39', hi: '\u0939' },  // ഹ / ह
+    z: { ml: '\u0D38', hi: '\u091C\u093C' }, // സ / ज़
+    q: { ml: '\u0D15', hi: '\u0915' },  // ക / क
+  };
+
+  let out = '';
+  let i = 0;
+  let pendingConsonant: { ml: string; hi: string; mlChillu?: string } | null = null;
+
+  while (i < text.length) {
+    const remaining = text.slice(i).toLowerCase();
+
+    // Check non-alphabetic characters (spaces, numbers, punctuation)
+    const ch = text[i];
+    if (!/[a-zA-Z]/.test(ch)) {
+      if (pendingConsonant) {
+        if (toLang === 'ml') {
+          out += pendingConsonant.mlChillu || (pendingConsonant.ml + '\u0D4D');
+        } else {
+          out += pendingConsonant.hi;
+        }
+        pendingConsonant = null;
+      }
+      out += ch;
+      i++;
+      continue;
+    }
+
+    // 1. Try 3-char consonant
+    const three = remaining.slice(0, 3);
+    if (CONSONANTS[three]) {
+      if (pendingConsonant) {
+        if (toLang === 'ml') {
+          out += pendingConsonant.mlChillu || (pendingConsonant.ml + '\u0D4D');
+        } else {
+          out += pendingConsonant.hi + '\u094D';
+        }
+      }
+      pendingConsonant = CONSONANTS[three];
+      i += 3;
+      continue;
+    }
+
+    // 2. Try 2-char vowel
+    const two = remaining.slice(0, 2);
+    if (VOWELS[two]) {
+      const v = VOWELS[two];
+      if (pendingConsonant) {
+        out += toLang === 'ml' ? (pendingConsonant.ml + v.mlMat) : (pendingConsonant.hi + v.hiMat);
+        pendingConsonant = null;
+      } else {
+        out += toLang === 'ml' ? v.mlInd : v.hiInd;
+      }
+      i += 2;
+      continue;
+    }
+
+    // 3. Try 2-char consonant
+    if (CONSONANTS[two]) {
+      if (pendingConsonant) {
+        if (toLang === 'ml') {
+          out += pendingConsonant.mlChillu || (pendingConsonant.ml + '\u0D4D');
+        } else {
+          out += pendingConsonant.hi + '\u094D';
+        }
+      }
+      pendingConsonant = CONSONANTS[two];
+      i += 2;
+      continue;
+    }
+
+    // 4. Try 1-char vowel
+    const one = remaining.slice(0, 1);
+    if (VOWELS[one]) {
+      const v = VOWELS[one];
+      if (pendingConsonant) {
+        out += toLang === 'ml' ? (pendingConsonant.ml + v.mlMat) : (pendingConsonant.hi + v.hiMat);
+        pendingConsonant = null;
+      } else {
+        out += toLang === 'ml' ? v.mlInd : v.hiInd;
+      }
+      i += 1;
+      continue;
+    }
+
+    // 5. Try 1-char consonant
+    if (CONSONANTS[one]) {
+      if (pendingConsonant) {
+        if (toLang === 'ml') {
+          out += pendingConsonant.mlChillu || (pendingConsonant.ml + '\u0D4D');
+        } else {
+          out += pendingConsonant.hi + '\u094D';
+        }
+      }
+      pendingConsonant = CONSONANTS[one];
+      i += 1;
+      continue;
+    }
+
+    // Fallback unknown letter (e.g. 'x')
+    if (pendingConsonant) {
+      if (toLang === 'ml') {
+        out += pendingConsonant.mlChillu || (pendingConsonant.ml + '\u0D4D');
+      } else {
+        out += pendingConsonant.hi;
+      }
+      pendingConsonant = null;
+    }
+    out += ch;
+    i++;
+  }
+
+  // Flush remaining consonant at string end
+  if (pendingConsonant) {
+    if (toLang === 'ml') {
+      out += pendingConsonant.mlChillu || (pendingConsonant.ml + '\u0D4D');
+    } else {
+      out += pendingConsonant.hi;
+    }
+    pendingConsonant = null;
+  }
+
+  return out;
 }
 
 export interface TranslationResult {
@@ -343,6 +530,7 @@ export interface TranslationResult {
   sourceScript: ScriptId;
   targetLang: TargetLanguage;
   isDictionaryMatch: boolean;
+  isTransliterated?: boolean;
   isMachineEnhanced?: boolean;
 }
 
@@ -390,11 +578,13 @@ export function translateCustomText(
       sourceScript,
       targetLang,
       isDictionaryMatch: true,
+      isTransliterated: false,
     };
   }
 
   // Step B: ISCII Phonetic Transliteration
   const transliterated = transliterateISCII(originalText, sourceScript, targetLang);
+  const isTrans = transliterated !== originalText;
 
   return {
     translatedText: transliterated,
@@ -402,6 +592,7 @@ export function translateCustomText(
     sourceScript,
     targetLang,
     isDictionaryMatch: false,
+    isTransliterated: isTrans,
   };
 }
 
