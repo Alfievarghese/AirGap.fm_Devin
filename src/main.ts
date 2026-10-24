@@ -45,12 +45,6 @@ import {
   NODE_ID_BROADCAST,
   NODE_ID_WALL,
 } from './protocol/nodeId';
-import {
-  renderTargetSelector,
-  bindTargetSelectorEvents,
-  resolveTargetNodeId,
-  TargetType,
-} from './ui/authority';
 import { logEvent, exportCSV, exportJSON, clearLogs } from './store/log';
 import { DEFAULT_CONFIG } from './lib/config';
 import { runSimulation, SimResult } from './relay/sim';
@@ -84,10 +78,8 @@ let modularActionId = 0;
 let modularLocationId = 0;
 let useModularSentence = false;
 
-// Node Identity & Targeted Routing State
+// Node Identity
 let myNodeId = getLocalNodeId();
-let authTargetType: TargetType = 'broadcast';
-let authCustomTargetHex = 'A4';
 
 // Wall State
 let wallFrameCount = 0;
@@ -615,10 +607,8 @@ function renderAuthority(el: HTMLElement): void {
         </div>
       </div>
 
-      <!-- Right Column: Target Routing & Message Composer -->
+      <!-- Right Column: Message Composer -->
       <div>
-        ${renderTargetSelector(authTargetType, authCustomTargetHex)}
-
         <div class="card p-0" style="overflow: hidden;">
           <!-- Dual Subtabs Nav -->
           <div class="auth-tabs-nav">
@@ -880,29 +870,16 @@ function renderAuthority(el: HTMLElement): void {
     });
   });
 
-  // Target Destination Selector Events
-  bindTargetSelectorEvents(
-    el,
-    { targetType: authTargetType, customHex: authCustomTargetHex },
-    (newState) => {
-      authTargetType = newState.targetType;
-      authCustomTargetHex = newState.customHex;
-      render();
-    }
-  );
-
   // Broadcast Instant Alert
   el.querySelector('#auth-broadcast-btn')!.addEventListener('click', async () => {
-    const targetNodeId = resolveTargetNodeId(authTargetType, authCustomTargetHex);
-
     isAuthorityBroadcasting = true;
     render();
 
     await initAudio();
     if (useModularSentence) {
-      await sendAuthorityBeacon(0xff, new Uint8Array([modularSubjectId, modularActionId, modularLocationId]), targetNodeId);
+      await sendAuthorityBeacon(0xff, new Uint8Array([modularSubjectId, modularActionId, modularLocationId]), NODE_ID_BROADCAST);
     } else {
-      await sendAuthorityBeacon(selectedTemplateId, undefined, targetNodeId);
+      await sendAuthorityBeacon(selectedTemplateId, undefined, NODE_ID_BROADCAST);
     }
 
     isAuthorityBroadcasting = false;
@@ -916,13 +893,11 @@ function renderAuthority(el: HTMLElement): void {
       return;
     }
 
-    const targetNodeId = resolveTargetNodeId(authTargetType, authCustomTargetHex);
-
     isAuthorityBroadcasting = true;
     render();
 
     await initAudio();
-    await sendCustomPagerBeacon(customPagerText.trim(), targetNodeId);
+    await sendCustomPagerBeacon(customPagerText.trim(), NODE_ID_BROADCAST);
 
     isAuthorityBroadcasting = false;
     render();

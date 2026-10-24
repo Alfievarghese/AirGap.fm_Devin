@@ -34,7 +34,9 @@ export default defineConfig({
         ],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         // Versioned cache name
-        cacheId: 'airgap-fm-v2',
+        cacheId: 'airgap-fm-v3',
+        skipWaiting: true,
+        clientsClaim: true,
       },
     }),
   ],
