@@ -1,57 +1,52 @@
-# AirGap.fm · Technical Architecture & Protocol Specification
+# AirGap.fm Technical Architecture
 
 ## 1. System Overview
 
-AirGap.fm is a zero-infrastructure, browser-native acoustic mesh emergency alert transceiver. It converts commodity consumer smartphones into decentralized acoustic nodes that transmit and relay authenticated civil defense alerts using near-ultrasonic and audible sound waves (1.8 kHz – 6.3 kHz).
+AirGap.fm is a zero infrastructure acoustic mesh transceiver running in web browsers. It lets phones exchange short authenticated messages across rooms using audible sound waves between 1.8 kHz and 6.3 kHz.
 
 ```mermaid
 graph TD
-    subgraph Authority ["Civil Authority / TX Station"]
-        A[Incident Commander] -->|Select Directive / Custom Text| B[1-Byte Indic Compressor]
-        B --> C[14-Byte Frame Builder]
-        C -->|Compute 32-bit HMAC| D[Immutable Payload]
-        D --> E[AudioWorklet / FSK Modulator]
+    subgraph Sender ["Phone A (Sender)"]
+        A[User Input] --> B[1 Byte Indic Compressor]
+        B --> C[14 Byte Frame Builder]
+        C --> D[Compute 4 Byte MAC]
+        D --> E[Web Audio and ggwave Modem]
     end
 
-    E -->|1.8 - 6.3 kHz Sound Wave| Air[Acoustic Channel / Room Airspace]
+    E -->|Audible Sound 1.8 to 6.3 kHz| Air[Room Airspace]
 
-    subgraph Mesh ["Acoustic Mesh Network"]
-        Air --> F[Node #1: Intermediate Relay]
-        F -->|Validate Frame & HMAC| G{Target Node ID?}
-        G -->|Matches Another Node| H[Amber Flash: Silent Relay]
-        H -->|Trickle Delay RFC 6206| I[Forward Chirp]
-        I --> Air2[Acoustic Echo]
+    subgraph Relay ["Phone B (Relay)"]
+        Air --> F[Microphone Capture]
+        F --> G[Check Shared Key MAC]
+        G --> H{Target Match?}
+        H -->|Target Is Another Phone| I[Amber Flash and Delay]
+        I --> J[Forward Chirp]
 
-        Air2 --> J[Node #2: Destination Node #A4]
-        J -->|Matches My Node ID| K[Cyan Flash + Arrival Chime]
-        K --> L[Decode Malayalam/Hindi Text]
-        K --> M[Suppress Retransmission]
+        H -->|Target Is Me| K[Cyan Flash and Chime]
+        K --> L[Suppress Relay]
+    end
 
-        Air --> N[Projector Wall Display Node #FF]
-        N --> O[Live 96-bin FFT Waterfall]
-        N --> P[Hop Timeline & Mesh Topology]
+    subgraph Wall ["Projector Wall Display"]
+        Air --> M[Audio Spectrum Waterfall]
+        M --> N[Hop Counter and Log]
     end
 ```
 
 ---
 
-## 2. Physical & Data Link Layer (Acoustic FSK)
+## 2. Acoustic Physical Layer
 
-### 2.1 Frequency Allocation
-The acoustic physical layer operates across **1,800 Hz to 6,300 Hz**, utilizing multi-frequency shift keying (M-FSK) through the Web Audio API and `ggwave`:
-- **Audible frequencies (1.8 kHz – 4.5 kHz)**: High acoustic penetration through drywall, concrete corridors, and outdoor environments.
-- **Near-ultrasonic boundary (4.5 kHz – 6.3 kHz)**: Low acoustic annoyance for human ears while remaining well within the 44.1 kHz / 48 kHz sampling range of standard smartphone MEMS microphones.
+### 2.1 Frequency Modulation
+The acoustic modem uses multi frequency shift keying provided by the ggwave library through the browser Web Audio interface. All transmission frequencies sit between 1800 Hz and 6300 Hz. This entire range is audible to humans and sounds like short electronic chirps.
 
-### 2.2 Airtime Minimization & Chirp Timing
-- Chirp duration is directly proportional to payload byte count.
-- An uncompressed 40-byte JSON alert takes **~4.8 seconds** of continuous sound—causing high collision probability and severe acoustic annoyance.
-- AirGap.fm strictly bounds all acoustic transmissions to **14 bytes**, achieving an airtime of **~1.14 seconds**.
+### 2.2 Airtime
+Chirp duration scales with payload size. Uncompressed text alerts take several seconds to transmit. AirGap.fm fixes all packets to 14 bytes, keeping airtime to approximately 1.14 seconds per chirp.
 
 ---
 
-## 3. 14-Byte Binary Frame Layout
+## 3. 14 Byte Frame Layout
 
-All packets are encoded as fixed-width 14-byte binary buffers.
+Packets use a compact 14 byte binary structure:
 
 ```
  0                   1                   2                   3
@@ -60,100 +55,64 @@ All packets are encoded as fixed-width 14-byte binary buffers.
 |Ver|Typ|Script | Target Node ID|           Alert ID            |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                         Alert Payload                         |
-|           (5 Bytes: Template Params OR Indic Text)           |
+|           (5 Bytes: Template Params OR Indic Text)            |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| Hop |   TTL   |               HMAC-SHA256 (32-bit)            |
+| Hop |   TTL   |               HMAC SHA256 (32 bit)            |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-### 3.1 Field Specification
-| Byte Offset | Field Name | Width | Description |
-|:---|:---|:---|:---|
-| `[0]` | Version & Type | 1 Byte | `bits 7..6`: Protocol Version (`01b`)<br>`bits 5..4`: FrameType (`00b` = Template Alert, `01b` = Custom Indic Pager)<br>`bits 3..0`: ScriptId (`0` = ASCII, `1` = Malayalam, `2` = Hindi) |
-| `[1]` | Target Node ID | 1 Byte | `0x00`: Room Broadcast (All nodes display & relay)<br>`0xFF`: Projector Wall (Display sink node)<br>`0x01..0xFE`: Targeted Unicast (Point-to-point addressing) |
-| `[2..3]` | Alert ID | 2 Bytes | Unique `uint16` identifier (big-endian) for deduplication and replay protection |
-| `[4..8]` | Payload | 5 Bytes | **FrameType 0**: `[4]` Template ID, `[5]` Region Code, `[6..8]` Subject, Action, Location params.<br>**FrameType 1**: 5 bytes of single-byte compressed Indic or ASCII text. |
-| `[9]` | Hop & TTL | 1 Byte | `bits 7..4`: Hop count (incremented each acoustic relay)<br>`bits 3..0`: Time-to-Live (decremented each hop; discarded at 0). **MUTABLE FIELD (Excluded from MAC)**. |
-| `[10..13]` | MAC | 4 Bytes | Truncated 32-bit HMAC-SHA256 signature calculated across immutable bytes `[0..8]`. |
+| Byte Offset | Field Name | Width | Purpose |
+|---|---|---|---|
+| 0 | Version and Type | 1 Byte | Version (2 bits), FrameType (2 bits), ScriptId (4 bits) |
+| 1 | Target Node ID | 1 Byte | 0x00 for Room Broadcast, 0xFF for Projector Wall, 0x01 to 0xFE for Unicast |
+| 2 to 3 | Alert ID | 2 Bytes | Unique packet identifier for deduplication |
+| 4 to 8 | Payload | 5 Bytes | Template IDs and parameters or 5 compressed Indic text bytes |
+| 9 | Hop and TTL | 1 Byte | High nibble is Hop counter. Low nibble is TTL. Mutable byte excluded from MAC |
+| 10 to 13 | MAC | 4 Bytes | Truncated 32 bit HMAC SHA256 over immutable bytes 0 through 8 |
 
 ---
 
-## 4. 1-Byte Indic Unicode Delta Compressor
+## 4. 1 Byte Indic Delta Compressor
 
-### 4.1 The Problem
-In standard UTF-8 encoding:
-- Malayalam Unicode glyphs (`U+0D00` to `U+0D7F`) consume **3 bytes each**.
-- Devanagari/Hindi Unicode glyphs (`U+0900` to `U+097F`) consume **3 bytes each**.
-- A 5-letter emergency word like `സഹായം` ("HELP") consumes **15 bytes**—exceeding our entire 14-byte acoustic frame budget.
+Standard UTF-8 encoding uses 3 bytes for every Malayalam glyph (U+0D00 to U+0D7F) and Devanagari glyph (U+0900 to U+097F). A 5 character word would require 15 bytes and exceed the frame budget.
 
-### 4.2 The Mathematical Solution
-All active Malayalam and Hindi characters lie within a compact 128-code-point block. AirGap.fm uses an offset mapping algorithm:
+Because active glyphs occupy a compact 128 code point block, AirGap.fm maps each character into a single byte:
 
-$$\text{EncodedByte} = (\text{CodePoint} - \text{BaseOffset}) \ \& \ \text{0x7F}$$
+```text
+EncodedByte = (CodePoint - BaseOffset) & 0x7F
+```
 
 Where:
-- $\text{BaseOffset}_{\text{Malayalam}} = \text{0x0D00}$
-- $\text{BaseOffset}_{\text{Devanagari}} = \text{0x0900}$
-- ASCII characters (`0x00` to `0x7F`) map directly with high bit clear.
+- BaseOffset for Malayalam is 0x0D00
+- BaseOffset for Devanagari is 0x0900
+- Standard ASCII characters map directly with the high bit set to zero
 
-**Result:** A **66.7% reduction** in byte overhead, allowing complete localized Indic words to fit into 5 payload bytes without packet fragmentation.
-
----
-
-## 5. Targeted Device Routing & Privacy Model
-
-To prevent room-wide panic and conserve acoustic airtime during localized incidents (e.g., directing a first responder to node `#A4`), AirGap.fm implements a 3-tier routing state machine:
-
-```mermaid
-stateDiagram-v2
-    [*] --> FrameReceived
-    FrameReceived --> ValidateHMAC: Verify 32-bit HMAC
-    ValidateHMAC --> Discard: MAC Invalid (Tampered/Noise)
-    ValidateHMAC --> RouteCheck: MAC Valid
-
-    state RouteCheck {
-        [*] --> CheckTarget
-        CheckTarget --> Broadcast: Target == 0x00
-        CheckTarget --> Sink: Target == 0xFF
-        CheckTarget --> UnicastMe: Target == MyNodeId
-        CheckTarget --> UnicastOther: Target != MyNodeId
-    }
-
-    Broadcast --> DisplayEmerald: Flash Emerald Screen
-    DisplayEmerald --> ScheduleRelay: Schedule Trickle Gossip
-
-    UnicastMe --> DisplayCyan: Flash Cyan + Chime
-    DisplayCyan --> Suppress: Suppress Relay (Destination Reached)
-
-    UnicastOther --> SilentAmber: Flash Amber ("Routing to #ID")
-    SilentAmber --> ScheduleRelay: Hide Payload & Relay
-
-    Sink --> DisplayWall: Update Waterfall & Hop Chart
-```
-
-1. **Broadcast (`0x00`)**: Full screen emergency takeover with high-contrast strobe and audible voice synthesis.
-2. **Target Destination (`MyNodeId === TargetNodeId`)**: Dedicated arrival chime, distinct cyan `#06B6D4` HUD badge, and **relay suppression** to prevent unnecessary echo.
-3. **Intermediate Relay (`MyNodeId !== TargetNodeId`)**: Preserves patient/victim privacy. The interface **masks message payload** and displays a tactical telemetry pill (`ROUTING PACKET TO #ID · HOP 2`) while relaying sound.
+This compresses text by 66.7 percent, allowing short localized words to fit inside 5 bytes.
 
 ---
 
-## 6. Collision Avoidance & Relay Suppression (RFC 6206)
+## 5. Routing and Relay Rules
 
-In a hall with 100 smartphones, simultaneous acoustic retransmissions would cause constructive acoustic interference, destroying FSK demodulation.
-
-AirGap.fm adapts the **IETF RFC 6206 Trickle Algorithm**:
-- **Deduplication Key**: $\text{AlertID} \parallel \text{MAC}_{[0..3]}$ stored in local in-memory LRU ring buffer.
-- **Redundancy Counter ($k=2$)**: If a node hears $k$ duplicate acoustic chirps before its randomized transmission timer expires, it cancels its retransmission.
-- **Jitter Window**: Random delay $t \in [I/2, I]$ where $I \in [1.5s, 6.0s]$.
-- **Hop & TTL Bounding**: Packets with $\text{TTL} \le 1$ or $\text{Hop} \ge 16$ are permanently retired.
+1. Room Broadcast (Target 0x00): Every phone flashes green, shows the message card, and schedules a relay chirp.
+2. Targeted Unicast (Target matches My Node ID): The destination phone flashes cyan, sounds an arrival chime, shows the message card, and stops retransmission.
+3. Intermediate Relay (Target is another phone): The phone displays a routing banner with the target ID, hides the card body on its own screen, and passes the acoustic chirp forward. Packets travel in plain text over the air and are not encrypted.
+4. Wall Sink (Target 0xFF): The projector screen logs hop numbers and shows live spectrum waterfall graphics.
 
 ---
 
-## 7. Cryptographic Integrity & Threat Model
+## 6. Collision Avoidance
 
-| Threat | Attack Vector | AirGap.fm Defense |
-|:---|:---|:---|
-| **Rogue Panic Spoofing** | Attacker plays fake "Evacuate" FSK chirp through loudspeaker. | **32-Bit HMAC-SHA256**: Receiver validates signature against civil defense authority pre-shared key. Unsigned/invalid chirps rejected silently. |
-| **Replay Attacks** | Attacker records yesterday's valid acoustic evacuation chirp and plays it back. | **Rolling 15-Minute Epoch**: Timestamp buckets embedded in payload; packets older than 15 minutes rejected. |
-| **Man-in-the-Middle** | Attacker attempts to modify quadrant/evacuation directive in transit. | **Immutable Range**: Bytes `[0..8]` protected by HMAC. Any byte alteration invalidates cryptographic signature. |
-| **Acoustic Jamming** | Continuous white noise or loud crowd cheering (>85 dB). | **Goertzel SNR Thresholding & 3x Burst Repeat**: Modulator includes 3-fold redundancy bursts; FFT waterfall allows visual operator identification of jammed bins. |
+To prevent room wide packet collisions when multiple phones hear the same chirp, AirGap.fm uses the Trickle gossip rule from RFC 6206:
+- Deduplication: Nodes record seen Alert ID and MAC pairs in memory.
+- Redundancy counter k = 2: If a phone hears duplicate chirps while waiting to transmit, it cancels its own relay.
+- Jitter delay: Retransmission is scheduled with a randomized delay between 1.5 seconds and 6.0 seconds.
+- Hop limit: Packets discard when TTL reaches zero or hop count exceeds 15.
+
+---
+
+## 7. Security and Authentication Model
+
+- Authentication: Packets are signed with a truncated 4 byte HMAC SHA256 over bytes 0 through 8.
+- Pre shared demo key: The demo secret key is embedded directly in client JavaScript. Anyone with code access can forge messages. Production field use requires out of band key distribution.
+- No encryption: Audio transmissions are broadcast in plain text. Any listening device running the decoder can read payload contents.
+- Replay: Replay suppression relies on an in memory table of seen Alert IDs. The 14 byte wire frame contains no timestamp field.
