@@ -1,0 +1,17 @@
+{
+  "name": "AirGap.fm Offline Acoustic Transceiver",
+  "short_name": "AirGap.fm",
+  "description": "Offline acoustic mesh alert system relaying emergency beacons across air-gapped devices using sound waves.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f3ec",
+  "theme_color": "#f5f3ec",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

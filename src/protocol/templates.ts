@@ -1,6 +1,6 @@
 /**
- * Alert templates: multilingual short messages from a template ID.
- * Templates let us broadcast meaning in a few bytes instead of full text.
+ * Alert templates & 3-Dropdown Modular Sentence Builder.
+ * Multilingual short messages broadcast meaning in 3-13 bytes instead of full text.
  */
 
 export const enum RegionCode {
@@ -17,14 +17,10 @@ export interface AlertTemplate {
   en: string;
   ml: string;
   hi: string;
-  /** Optional param description */
   paramDesc?: string;
 }
 
-/**
- * Template registry.
- * Params byte usage documented per template.
- */
+/** Pre-configured 1-tap template registry */
 export const TEMPLATES: AlertTemplate[] = [
   {
     id: 0x01,
@@ -64,18 +60,78 @@ export const TEMPLATES: AlertTemplate[] = [
   },
 ];
 
+export interface ModularItem {
+  id: number;
+  en: string;
+  ml: string;
+  hi: string;
+}
+
+export const MODULAR_SUBJECTS: ModularItem[] = [
+  { id: 0, en: 'Medical Team', ml: 'ഡോക്ടർമാർ', hi: 'चिकित्सा दल' },
+  { id: 1, en: 'Rescue Boat', ml: 'രക്ഷാ ബോട്ട്', hi: 'बचाव नाव' },
+  { id: 2, en: 'Drinking Water', ml: 'കുടിവെള്ളം', hi: 'पीने का पानी' },
+  { id: 3, en: 'Food Packets', ml: 'ഭക്ഷണ പൊതികൾ', hi: 'भोजन पैकेट' },
+  { id: 4, en: 'Elderly & Kids', ml: 'മുതിർന്നവരും കുട്ടികളും', hi: 'बुजुर्ग और बच्चे' },
+  { id: 5, en: 'Emergency Shelter', ml: 'അഭയകേന്ദ്രം', hi: 'आपातकालीन आश्रय' },
+  { id: 6, en: 'Fallen Power Line', ml: 'പൊട്ടിയ വൈദ്യുത ലൈൻ', hi: 'बिजली का तार गिरा' },
+];
+
+export const MODULAR_ACTIONS: ModularItem[] = [
+  { id: 0, en: 'Required Urgently', ml: 'അടിയന്തിരമായി വേണം', hi: 'तुरंत आवश्यकता है' },
+  { id: 1, en: 'Dispatched to Site', ml: 'പുറപ്പെട്ടു', hi: 'रवाना कर दिया गया' },
+  { id: 2, en: 'Arrived at Location', ml: 'എത്തിച്ചേർന്നു', hi: 'पहुंच गए' },
+  { id: 3, en: 'Evacuate Now', ml: 'ഉടൻ ഒഴിഞ്ഞുപോകുക', hi: 'तुरंत खाली करें' },
+  { id: 4, en: 'Stand By in Place', ml: 'സ്ഥലത്ത് തുടരുക', hi: 'अपनी जगह पर रहें' },
+  { id: 5, en: 'Route Blocked', ml: 'വഴി തടസ്സപ്പെട്ടു', hi: 'रास्ता बंद है' },
+];
+
+export const MODULAR_LOCATIONS: ModularItem[] = [
+  { id: 0, en: 'Relief Camp Area', ml: 'ക്യാമ്പ് പ്രദേശം', hi: 'शिविर क्षेत्र' },
+  { id: 1, en: 'River Bank', ml: 'പുഴയോരം', hi: 'नदी तट' },
+  { id: 2, en: 'Sector 4 School', ml: 'സെക്ടർ 4 സ്കൂൾ', hi: 'सेक्टर 4 स्कूल' },
+  { id: 3, en: 'Main Gate', ml: 'പ്രധാന ഗേറ്റ്', hi: 'मुख्य द्वार' },
+  { id: 4, en: 'High Ground Hill', ml: 'ഉയർന്ന പ്രദേശം', hi: 'ऊँचा स्थान' },
+  { id: 5, en: 'Bridge Junction', ml: 'പാലം ജംഗ്ഷൻ', hi: 'पुल जंक्शन' },
+  { id: 6, en: 'Community Hall', ml: 'കമ്മ്യൂണിറ്റി ഹാൾ', hi: 'सामुदायिक भवन' },
+];
+
 /** Look up a template by ID */
 export function getTemplate(templateId: number): AlertTemplate | undefined {
   return TEMPLATES.find((t) => t.id === templateId);
+}
+
+/** Render a modular 3-dropdown sentence */
+export function renderModularAlert(
+  subjectId: number,
+  actionId: number,
+  locationId: number,
+  lang: Language
+): string {
+  const subj = MODULAR_SUBJECTS.find((s) => s.id === subjectId) ?? MODULAR_SUBJECTS[0];
+  const act = MODULAR_ACTIONS.find((a) => a.id === actionId) ?? MODULAR_ACTIONS[0];
+  const loc = MODULAR_LOCATIONS.find((l) => l.id === locationId) ?? MODULAR_LOCATIONS[0];
+
+  return `${subj[lang]} • ${act[lang]} • ${loc[lang]}`;
 }
 
 /** Render a template in the requested language */
 export function renderTemplate(
   templateId: number,
   lang: Language,
-  _params?: Uint8Array
+  params?: Uint8Array
 ): string {
+  // If template is custom modular builder (id 0xFF or params provided)
+  if (templateId === 0xff && params && params.length >= 3) {
+    return renderModularAlert(params[0], params[1], params[2], lang);
+  }
+
   const tpl = getTemplate(templateId);
-  if (!tpl) return `[Unknown template ${templateId}]`;
+  if (!tpl) {
+    if (params && params.length >= 3) {
+      return renderModularAlert(params[0], params[1], params[2], lang);
+    }
+    return `[Unknown template ${templateId}]`;
+  }
   return tpl[lang];
 }

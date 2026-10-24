@@ -155,6 +155,7 @@ export async function runSimulation(
   const originFrame: BeaconFrame = {
     version: FRAME_VERSION,
     type: FrameType.BEACON,
+    targetNodeId: 0x00,
     alertId,
     templateId,
     regionCode: 0,

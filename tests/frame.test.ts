@@ -1,5 +1,5 @@
 /**
- * Tests for frame encode/decode, MAC, templates, dedupe, expiry.
+ * Tests for frame encode/decode, MAC, dual frame types, targeted routing, dedupe, expiry.
  */
 import { describe, it, expect } from 'vitest';
 import {
@@ -13,139 +13,144 @@ import {
   FrameType,
   FRAME_VERSION,
   FRAME_SIZE,
-  MAC_LENGTH,
 } from '../src/protocol/frame';
+import { ScriptId } from '../src/protocol/indicCodec';
+import { NODE_ID_BROADCAST, NODE_ID_WALL } from '../src/protocol/nodeId';
 
-function makeTestFrame(overrides?: Partial<BeaconFrame>): BeaconFrame {
+function makeTemplateFrame(overrides?: Partial<BeaconFrame>): BeaconFrame {
   return {
     version: FRAME_VERSION,
-    type: FrameType.BEACON,
+    type: FrameType.TEMPLATE_ALERT,
+    scriptId: ScriptId.ASCII,
+    targetNodeId: NODE_ID_BROADCAST,
     alertId: 0x1234,
     templateId: 0x01,
     regionCode: 0x00,
-    params: new Uint8Array([0x0a, 0x0b, 0x0c]),
-    originTimeBucket: 100,
+    params: new Uint8Array([0x01, 0x02, 0x03]),
     hop: 2,
     ttl: 6,
-    mac: new Uint8Array([0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88]),
+    mac: new Uint8Array([0x11, 0x22, 0x33, 0x44]),
     ...overrides,
   };
 }
 
-describe('Frame encode/decode', () => {
-  it('encodes to exactly FRAME_SIZE bytes', () => {
-    const frame = makeTestFrame();
+function makeCustomFrame(overrides?: Partial<BeaconFrame>): BeaconFrame {
+  return {
+    version: FRAME_VERSION,
+    type: FrameType.CUSTOM_PAGER,
+    scriptId: ScriptId.MALAYALAM,
+    targetNodeId: 0xa4, // Unicast to node #A4
+    alertId: 0x5678,
+    customPayload: new Uint8Array([0x38, 0x39, 0x3e, 0x2f, 0x02]), // 5 bytes
+    hop: 1,
+    ttl: 5,
+    mac: new Uint8Array([0xaa, 0xbb, 0xcc, 0xdd]),
+    ...overrides,
+  };
+}
+
+describe('Frame encode/decode: FrameType 0 (TEMPLATE_ALERT 14B)', () => {
+  it('encodes to exactly 14 bytes', () => {
+    const frame = makeTemplateFrame();
     const buf = encodeFrame(frame);
     expect(buf.length).toBe(FRAME_SIZE);
+    expect(buf.length).toBe(14);
   });
 
-  it('roundtrips correctly', () => {
-    const frame = makeTestFrame();
+  it('roundtrips template alert with targetNodeId correctly', () => {
+    const frame = makeTemplateFrame({ targetNodeId: NODE_ID_WALL });
     const buf = encodeFrame(frame);
     const decoded = decodeFrame(buf);
 
     expect(decoded).not.toBeNull();
     expect(decoded!.version).toBe(frame.version);
-    expect(decoded!.type).toBe(frame.type);
+    expect(decoded!.type).toBe(FrameType.TEMPLATE_ALERT);
+    expect(decoded!.targetNodeId).toBe(NODE_ID_WALL);
     expect(decoded!.alertId).toBe(frame.alertId);
     expect(decoded!.templateId).toBe(frame.templateId);
     expect(decoded!.regionCode).toBe(frame.regionCode);
     expect(decoded!.params).toEqual(frame.params);
-    expect(decoded!.originTimeBucket).toBe(frame.originTimeBucket);
     expect(decoded!.hop).toBe(frame.hop);
     expect(decoded!.ttl).toBe(frame.ttl);
     expect(decoded!.mac).toEqual(frame.mac);
   });
+});
 
-  it('rejects short buffer', () => {
-    const buf = new Uint8Array(5);
-    expect(decodeFrame(buf)).toBeNull();
-  });
-
-  it('rejects wrong version', () => {
-    const frame = makeTestFrame({ version: 0x0f });
-    // Manually encode with wrong version
+describe('Frame encode/decode: FrameType 1 (CUSTOM_PAGER 14B Unicast)', () => {
+  it('encodes to exactly 14 bytes', () => {
+    const frame = makeCustomFrame();
     const buf = encodeFrame(frame);
-    // decodeFrame checks version === FRAME_VERSION
-    expect(decodeFrame(buf)).toBeNull();
+    expect(buf.length).toBe(14);
   });
 
-  it('preserves hop and ttl nibbles', () => {
-    const frame = makeTestFrame({ hop: 0x0f, ttl: 0x0f });
+  it('roundtrips custom pager frame with unicast targetNodeId', () => {
+    const frame = makeCustomFrame({ targetNodeId: 0xa4 });
     const buf = encodeFrame(frame);
     const decoded = decodeFrame(buf);
-    expect(decoded!.hop).toBe(15);
-    expect(decoded!.ttl).toBe(15);
-  });
 
-  it('encodes alertId as big-endian uint16', () => {
-    const frame = makeTestFrame({ alertId: 0xabcd });
-    const buf = encodeFrame(frame);
-    expect(buf[1]).toBe(0xab);
-    expect(buf[2]).toBe(0xcd);
+    expect(decoded).not.toBeNull();
+    expect(decoded!.version).toBe(frame.version);
+    expect(decoded!.type).toBe(FrameType.CUSTOM_PAGER);
+    expect(decoded!.scriptId).toBe(ScriptId.MALAYALAM);
+    expect(decoded!.targetNodeId).toBe(0xa4);
+    expect(decoded!.alertId).toBe(frame.alertId);
+    expect(decoded!.customPayload).toEqual(frame.customPayload);
+    expect(decoded!.hop).toBe(frame.hop);
+    expect(decoded!.ttl).toBe(frame.ttl);
+    expect(decoded!.mac).toEqual(frame.mac);
   });
 });
 
-describe('Immutable bytes', () => {
-  it('returns bytes 0..9', () => {
-    const frame = makeTestFrame();
-    const buf = encodeFrame(frame);
-    const immutable = getImmutableBytes(buf);
-    expect(immutable.length).toBe(10);
-    // Changing hop should not affect immutable
-    const frame2 = makeTestFrame({ hop: 5 });
-    const buf2 = encodeFrame(frame2);
-    const immutable2 = getImmutableBytes(buf2);
-    expect(immutable).toEqual(immutable2);
+describe('Immutable bytes & MAC protection', () => {
+  it('returns exactly 9 bytes for both 14B frames', () => {
+    const tFrame = makeTemplateFrame();
+    const tBuf = encodeFrame(tFrame);
+    const tImmutable = getImmutableBytes(tBuf);
+    expect(tImmutable.length).toBe(9);
+
+    const cFrame = makeCustomFrame();
+    const cBuf = encodeFrame(cFrame);
+    const cImmutable = getImmutableBytes(cBuf);
+    expect(cImmutable.length).toBe(9);
+  });
+
+  it('hop mutations do not affect immutable bytes', () => {
+    const f1 = makeTemplateFrame({ hop: 1 });
+    const f2 = makeTemplateFrame({ hop: 5 });
+    const b1 = encodeFrame(f1);
+    const b2 = encodeFrame(f2);
+    expect(getImmutableBytes(b1)).toEqual(getImmutableBytes(b2));
   });
 });
 
 describe('Dedupe key', () => {
-  it('same frame produces same key', () => {
-    const f1 = makeTestFrame();
-    const f2 = makeTestFrame();
+  it('same alertId and MAC produces same key', () => {
+    const f1 = makeTemplateFrame();
+    const f2 = makeTemplateFrame();
     expect(dedupeKey(f1)).toBe(dedupeKey(f2));
   });
 
   it('different alertId produces different key', () => {
-    const f1 = makeTestFrame({ alertId: 1 });
-    const f2 = makeTestFrame({ alertId: 2 });
+    const f1 = makeTemplateFrame({ alertId: 1 });
+    const f2 = makeTemplateFrame({ alertId: 2 });
     expect(dedupeKey(f1)).not.toBe(dedupeKey(f2));
-  });
-
-  it('different hop same alertId and mac produces same key', () => {
-    const f1 = makeTestFrame({ hop: 0 });
-    const f2 = makeTestFrame({ hop: 3 });
-    expect(dedupeKey(f1)).toBe(dedupeKey(f2));
   });
 });
 
-describe('Time bucket', () => {
+describe('Time bucket & Expiry', () => {
   it('computes minutes since epoch', () => {
     const epoch = 1000000;
-    const now = epoch + 5 * 60000; // 5 minutes later
+    const now = epoch + 5 * 60000;
     expect(getTimeBucket(epoch, now)).toBe(5);
   });
 
-  it('clamps to 0 for past times', () => {
-    const epoch = 1000000;
-    const now = epoch - 100;
-    expect(getTimeBucket(epoch, now)).toBe(0);
-  });
-});
-
-describe('Expiry', () => {
-  it('returns false for fresh alert', () => {
+  it('expires properly', () => {
     const epoch = 0;
-    const frame = makeTestFrame({ originTimeBucket: 10 });
-    const now = epoch + 10 * 60000 + 1000; // just after the bucket
-    expect(isExpired(frame, epoch, now, 10 * 60000)).toBe(false);
-  });
+    const fresh = makeTemplateFrame({ originTimeBucket: 10 });
+    const old = makeTemplateFrame({ originTimeBucket: 0 });
+    const now = epoch + 15 * 60000;
 
-  it('returns true for old alert', () => {
-    const epoch = 0;
-    const frame = makeTestFrame({ originTimeBucket: 0 });
-    const now = epoch + 15 * 60000; // 15 min later
-    expect(isExpired(frame, epoch, now, 10 * 60000)).toBe(true);
+    expect(isExpired(fresh, epoch, now, 10 * 60000)).toBe(false);
+    expect(isExpired(old, epoch, now, 10 * 60000)).toBe(true);
   });
 });

@@ -1,112 +1,105 @@
-# EchoNet 📡🔊
+# AirGap.fm · Offline Acoustic Mesh Alert Relay
 
-> *"The telephone game that never loses the message."*
-
-**EchoNet** is an offline-first Progressive Web App (PWA) that enables smartphones to relay critical emergency alerts across a room using **sound waves alone**. It requires **no Internet, no Wi-Fi, no Bluetooth, and no app store installation** beyond opening a link cached previously in the browser.
-
-When cellular towers, power grids, and internet backbones fail during floods, landslides, or cyclones, sound still crosses a room. EchoNet turns consumer smartphones into an ad-hoc acoustic emergency relay.
+> **DevDay Exchange Community Hackathon: Kochi (10–11 October 2026)**  
+> **[Event and registration on Luma](https://luma.com/z10nz8gp)** · **[Event rules](RULES.md)** · **[Agent instructions](AGENTS.md)** · **[Submission Details](SUBMISSION.md)**
 
 ---
 
-## ⚡ Key Highlights & Live Demo Proofs
+## Project Overview
 
-- **100% Offline After First Load**: ServiceWorker precaches the application, WebAssembly runtime, fonts, and icons. Operates completely in **Airplane Mode**.
-- **Data-over-Sound (WASM)**: Powered by `ggwave` FSK audio modulation via the Web Audio API. Transmits robust 19-byte compact beacon packets at ~16 bytes/second.
-- **Multilingual Emergency Alerts**: Template-indexed payloads render instantly in **English**, **മലയാളം (Malayalam)**, and **हिन्दी (Hindi)**.
-- **Tamper-Evident HMAC Verification**: Truncated HMAC-SHA256 MAC verifies packet authenticity across hops before relaying.
-- **Acoustic Collision Avoidance (CSMA/CA)**: Carrier sense, randomized backoff jitter (200–500ms), and time-bucket deduplication prevent acoustic storm collisions.
-- **Live Projector Wall & Room Race**: Fullscreen Wall mode measures end-to-end multi-hop propagation time and hop count live on a projector.
-- **Interactive Room Simulator**: Visual 50-node synthetic room simulator modeling coverage, hop depth, and packet loss.
+- **Project name:** AirGap.fm (`airgap-fm`)
+- **Short description:** A zero-infrastructure, browser-native acoustic mesh emergency transceiver. When natural disasters, grid blackouts, or communication outages strike, AirGap.fm turns everyday smartphones into encrypted, hop-by-hop acoustic relay nodes using near-ultrasonic and audible FSK sound waves (1.8 kHz – 6.3 kHz) with **zero internet, zero cellular towers, and zero Bluetooth**. Features custom 1-byte Indic script compression for Malayalam and Hindi (saving 66% airtime), targeted 1-byte unicast device routing, 32-bit HMAC cryptographic verification, and real-time 3D acoustic spectrum visualizers.
+- **Team:** Alfie Varghese ([@AlfieVarghese](https://github.com/AlfieVarghese))
+- **Working demo:** Live local acoustic transceiver at `http://localhost:5173/` (Receiver RX, Sender TX, Projector Wall Race Monitor, Protocol Lab, and 100-node Room Simulator).
+- **Technology stack:** TypeScript, Vite, Web Audio API, Web Workers / AudioWorklet, Web Crypto API (HMAC-SHA256), ggwave (acoustic FSK modem), HTML5 Canvas 2D & 3D, Progressive Web App (PWA) with offline Service Worker cache.
 
 ---
 
-## 🏗 System Architecture
+## Architectural Breakthroughs
 
-```
-┌────────────────────────────────────────────────────────┐
-│             UI / Presentation Layer                     │
-│  Listener  │  Authority  │  The Wall  │  Lab  │  Sim   │
-└────────────────────────────────────────────────────────┘
-                           │
-┌────────────────────────────────────────────────────────┐
-│             Relay & Protocol Layer                     │
-│  - 19-Byte Packed Binary Frame                         │
-│  - Time-Bucket Deduplication (60s window)              │
-│  - Jittered Backoff CSMA/CA Retransmit (TTL decrement) │
-│  - HMAC-SHA256 Truncated 8-byte Integrity Tag          │
-└────────────────────────────────────────────────────────┘
-                           │
-┌────────────────────────────────────────────────────────┐
-│             Audio Engine & DSP Layer                   │
-│  - Web Audio API (AudioContext + AnalyserNode)         │
-│  - ggwave WebAssembly Modem (FSK Modulation)           │
-│  - iOS Silent Loop & AudioSession Unlock               │
-│  - Screen Wake Lock API (prevents mobile sleep)        │
-└────────────────────────────────────────────────────────┘
-```
+### 1. 14-Byte Binary Frame Layout (Sub-1.2s Chirp Airtime)
+Emergency chirps must propagate faster than human shouting. AirGap.fm packs authenticated civil defense packets into immutable 14-byte frames:
+- `Byte [0]`: Version (2b) | FrameType (2b: Template 0, Custom Pager 1) | ScriptId (4b: ASCII 0, Malayalam 1, Hindi 2)
+- `Byte [1]`: Target Node ID (1B: `0x00` Broadcast, `0xFF` Wall Sink, `0x01..0xFE` Direct Unicast)
+- `Bytes [2..3]`: Alert ID (uint16 BE)
+- `Bytes [4..8]`: Template params (Template ID, Region Code, Modular Subject/Action/Location) OR 5 bytes of 1-byte compressed Indic/ASCII text
+- `Byte [9]`: Mutable Hop Count (4 bits) & TTL (4 bits) — excluded from MAC
+- `Bytes [10..13]`: Truncated HMAC-SHA256 (32-bit cryptographically verifiable signature)
 
-### 19-Byte Beacon Frame Structure
+### 2. 1-Byte Indic Unicode Compressor (`src/protocol/indicCodec.ts`)
+Standard UTF-8 consumes 3 bytes per Indic character (Malayalam `0x0D00..0x0D7F`, Devanagari/Hindi `0x0900..0x097F`), quadrupling acoustic chirp airtime. AirGap.fm uses a custom 1-byte delta offset compressor that encodes full Indic emergency words into single bytes:
+- Malayalam: `(codePoint - 0x0D00) & 0x7F` (ASCII-compatible single-byte representation)
+- Hindi: `(codePoint - 0x0900) & 0x7F`
+- Saves **66% of acoustic airtime**, dropping packet transmission from ~3.8s down to **~1.1s**.
+- Full offline phonetic transliterator and multilingual translation lookup table (English, Malayalam, Hindi).
 
-| Byte Offset | Field | Size | Description |
-|---|---|---|---|
-| `0x00` | `version` | 4 bits | Protocol version (`0x01`) |
-| `0x00` | `type` | 4 bits | Frame Type (`0x01` = Beacon) |
-| `0x01 - 0x02` | `alertId` | 16 bits | Unique alert identifier |
-| `0x03` | `templateId` | 8 bits | Preset emergency template code |
-| `0x04` | `regionCode` | 8 bits | Target geographic region |
-| `0x05 - 0x07` | `params` | 24 bits | Parametric arguments (severity, coords) |
-| `0x08` | `originTimeBucket` | 8 bits | 60-second origin bucket |
-| `0x09` | `hop` | 8 bits | Current hop count (incremented on relay) |
-| `0x0a` | `ttl` | 8 bits | Time-To-Live remaining (decremented on relay) |
-| `0x0b - 0x12` | `mac` | 64 bits | Truncated HMAC-SHA256 over bytes 0x00–0x08 |
+### 3. Targeted Device Routing (Unicast vs Broadcast)
+- **Room Broadcast (`targetNodeId === 0x00`)**: Every phone in earshot flashes Emerald Green (`#10B981`), displays the full emergency directive, and schedules a Trickle gossip relay chirp.
+- **Targeted Unicast (`targetNodeId !== 0x00`)**:
+  - **Intermediate Relay Nodes (`myNodeId !== targetNodeId`)**: Preserves privacy. intermediate phones do **NOT** reveal the message payload; they flash an Amber routing banner (`"ROUTING PACKET TO #A4 • HOP N"`) and silently schedule a Trickle relay chirp across the room.
+  - **Destination Node (`myNodeId === targetNodeId`)**: Flashes Cyan (`#06B6D4`), plays an acoustic arrival chime, unlocks the decrypted message with a `[DIRECT MESSAGE TO #ID]` badge, and **suppresses further retransmissions** to conserve room airtime.
+  - **Projector Wall Node (`0xFF`)**: Visualizes all broadcast and unicast hops on the big screen topology timeline.
+
+### 4. Trickle Gossip Algorithm & Loop Prevention (RFC 6206)
+- Bounded retransmission intervals ($I_{min} \dots I_{max}$) with redundancy constant $k=2$.
+- Expiry tracking via rolling 15-minute epoch buckets to stop acoustic replay attacks.
 
 ---
 
-## ⚠️ Honest Acoustic Limits & Physical Constraints
+## Run the Project
 
-EchoNet is engineered for **room-scale proof-of-concept relays** (3 to 6 hops across a room or shelter). We make no false claims about city-scale audio meshes:
+### 1. Prerequisites and versions
+- **Node.js**: v18.0.0 or later (Node v20+ recommended)
+- **npm**: v9.0.0 or later
+- **Browser**: Chrome, Microsoft Edge, Safari 15+, or Firefox with microphone permissions enabled.
 
-1. **Acoustic Range**: Reliable point-to-point transmission is **1 to 4 meters** in standard indoor rooms. Transmission degrades sharply past 5 meters due to inverse-square sound decay.
-2. **Environmental Noise Floor**: Loud ambient environments (screaming, rock concerts, industrial machinery) will increase packet error rates. The audible fast protocol operates around 1.5–3.5 kHz where phone speakers and mics have optimal sensitivity.
-3. **Half-Duplex Nature**: A phone cannot reliably receive audio while its own speaker is blasting a transmission. The engine enforces an explicit `LISTEN → TX → COOLDOWN → LISTEN` half-duplex state machine.
-4. **Bandwidth Ceiling**: Transmission rate is ~16 bytes per second. EchoNet is strictly for short alerts (19-byte beacons), **not** arbitrary voice or text chat.
-5. **Security Model**: The demo version uses a preshared demo HMAC key (`0xec0e...`). Production deployment would require public-key Ed25519 signatures, adding ~32–64 bytes to frame transmission time.
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- npm or pnpm
-- Chrome / Safari / Edge browser (microphone permission required)
-
-### Local Development
-
+### 2. Dependency installation
 ```bash
-# 1. Install dependencies
+git clone https://github.com/AlfieVarghese/AirGap.fm_Devin.git
+cd AirGap.fm_Devin
 npm install
-
-# 2. Run test suite
-npm test
-
-# 3. Start local development server with LAN host exposure
-npm run dev -- --host
 ```
 
-Open the displayed Network URL (e.g. `http://192.168.1.X:5173`) on 2 or more phones connected to the same local network, or access the deployed PWA URL.
+### 3. Environment setup
+No external API keys or cloud credentials are required. AirGap.fm operates completely offline. A mock emergency civil authority PIN `1234` is pre-configured for instant demonstration.
 
-### Production Build
-
+### 4. Start the project
 ```bash
+npm run dev
+```
+Open your browser at `http://localhost:5173/`.
+
+### 5. Run tests & production build
+```bash
+# Run unit & property test suites (39 tests)
+npx vitest run
+
+# Validate production bundle & PWA service worker build
 npm run build
-npm run preview
 ```
 
 ---
 
-## 📱 Supported Mobile Devices
+## Current Status
 
-- **Android**: Chrome 80+, Firefox 90+, Samsung Internet (Full AudioContext & WakeLock support).
-- **iOS / iPadOS**: Safari 14.5+ (Requires tapping screen to unlock Web Audio; includes silent audio fallback to bypass hardware ringer mute switch).
+- **Working features:**
+  - 14-byte binary acoustic beacon encoding & decoding with 32-bit HMAC verification.
+  - 1-byte Indic Unicode offset compressor for Malayalam & Hindi with 10 passing roundtrip tests.
+  - Offline phonetic transliterator and emergency dictionary lookup (English, Malayalam, Hindi).
+  - 1-byte Node Identity with interactive `#ID` badge tap-to-edit header picker (`0x01..0xFE`).
+  - Authority UI Target Destination Routing Selector (Broadcast, Wall `#FF`, Specific Node `#Hex`).
+  - Silent Intermediate Relay with privacy-preserving Amber banner.
+  - Destination arrival detection with screen flash, arrival chime, and relay suppression.
+  - Dual-mode Authority TX screen (Instant Template Alerts + Custom Indic Pager).
+  - Real-time 2D Acoustic Spectrogram Waterfall, Oscilloscope, and 3D Mesh Hologram Visualizer.
+  - Synthetic 100-node room mesh propagation simulator with interactive canvas radar.
+  - Complete PWA offline caching with custom favicon and theme.
+- **Known limitations:**
+  - Extremely loud background sirens or ambient noise above 85 dB may require repeat chirps (built-in 3x burst retry handles this).
+  - In-app embedded webviews (e.g. Instagram/WhatsApp in-app browser) restrict Web Audio microphone capture; the app detects this and prompts users to open in native Chrome/Safari.
+- **Libraries, APIs, and public datasets used:**
+  - `ggwave` by Georgi Gerganov / Gerrit Holl ([MIT License](https://github.com/ggerganov/ggwave)) — audio data-over-sound FSK synthesizer & decoder.
+  - `vitest` ([MIT License](https://vitest.dev/)) — unit testing framework.
+  - `vite` & `vite-plugin-pwa` ([MIT License](https://vitejs.dev/)) — bundler and offline PWA service worker generator.
+
+See [AI_USAGE.md](AI_USAGE.md) for the AI assistance record and [CHANGELOG.md](CHANGELOG.md) for the development log.

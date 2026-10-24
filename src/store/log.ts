@@ -1,5 +1,5 @@
 /**
- * IndexedDB event log for EchoNet.
+ * IndexedDB event log for AirGap.fm.
  * Records heard, relayed, dropped events with reasons.
  * Exports to JSON and CSV.
  */
@@ -17,7 +17,7 @@ export interface LogEntry {
   meta?: Record<string, unknown>;
 }
 
-const DB_NAME = 'echonet-log';
+const DB_NAME = 'airgap-log';
 const DB_VERSION = 1;
 const STORE_NAME = 'events';
 

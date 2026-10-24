@@ -1,5 +1,5 @@
 /**
- * EchoNet relay configuration.
+ * AirGap.fm relay configuration.
  * Every tunable parameter in one place for simulator and field test tuning.
  */
 export interface RelayConfig {

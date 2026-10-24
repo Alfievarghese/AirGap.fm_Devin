@@ -60,18 +60,25 @@ export class RelayEngine {
   private eventEpochMs: number;
   private now: () => number;
   private onAlert: ((frame: BeaconFrame) => void) | null = null;
+  private myNodeId = 0;
 
   constructor(
     config: Partial<RelayConfig> = {},
     clock?: () => number,
-    eventEpochMs?: number
+    eventEpochMs?: number,
+    myNodeId?: number
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.now = clock ?? (() => Date.now());
+    this.myNodeId = myNodeId ?? 0;
     // Default event epoch: midnight today
     this.eventEpochMs =
       eventEpochMs ??
       new Date(new Date().toDateString()).getTime();
+  }
+
+  setMyNodeId(id: number): void {
+    this.myNodeId = id;
   }
 
   setTransmitCallback(cb: TransmitCallback): void {
@@ -167,6 +174,11 @@ export class RelayEngine {
     if (frame.hop >= frame.ttl) {
       this.stats.dropped++;
       // Still return frame for UI display
+      return frame;
+    }
+
+    // Unicast destination reached: suppress further relaying across mesh
+    if (frame.targetNodeId !== 0 && this.myNodeId && frame.targetNodeId === this.myNodeId) {
       return frame;
     }
 

@@ -5,10 +5,10 @@ import { describe, it, expect } from 'vitest';
 import { computeMAC, verifyMAC } from '../src/crypto/mac';
 
 describe('MAC', () => {
-  it('produces 8 byte truncated HMAC', async () => {
+  it('produces 4 byte truncated HMAC', async () => {
     const data = new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const mac = await computeMAC(data);
-    expect(mac.length).toBe(8);
+    expect(mac.length).toBe(4);
   });
 
   it('verifies correct MAC', async () => {
