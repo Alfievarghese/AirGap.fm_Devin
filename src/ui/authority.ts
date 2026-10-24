@@ -1,5 +1,6 @@
 /**
  * Target Destination Selector for AirGap.fm Acoustic Mesh (`src/ui/authority.ts`).
+ * Strictly adheres to ANTI-EMOJI POLICY using high-precision vector SVG icons.
  *
  * Routing options:
  * - 0x00 Room Broadcast: Every phone displays, sounds alert, and forwards sound wave.
@@ -9,6 +10,7 @@
  */
 
 import { NODE_ID_BROADCAST, NODE_ID_WALL, parseNodeId, toHexId } from '../protocol/nodeId';
+import { ICONS } from './icons';
 
 export type TargetType = 'broadcast' | 'unicast' | 'wall';
 
@@ -40,11 +42,11 @@ export function renderTargetSelector(targetType: TargetType, unicastHex: string)
 
   let explanation = '';
   if (targetType === 'broadcast') {
-    explanation = '🔊 <strong>Room Broadcast Mode:</strong> Every phone in earshot will ring, flash, show the alert, and forward the sound wave.';
+    explanation = `<span class="inline-icon" style="display:inline-flex; vertical-align:middle; margin-right:6px; color:var(--color-primary);">${ICONS.broadcast}</span><strong>Room Broadcast Mode:</strong> Every phone in earshot will ring, flash, show the alert, and forward the sound wave.`;
   } else if (targetType === 'unicast') {
-    explanation = `🎯 <strong>Direct Unicast Mode:</strong> Only phone <strong>#${unicastHex || '??'}</strong> rings, flashes Cyan, and unlocks this message. Intermediate phones forward the sound pulse silently with text masked.`;
+    explanation = `<span class="inline-icon" style="display:inline-flex; vertical-align:middle; margin-right:6px; color:var(--color-cyan, #0891b2);">${ICONS.target}</span><strong>Direct Unicast Mode:</strong> Only phone <strong>#${unicastHex || '??'}</strong> rings, flashes Cyan, and unlocks this message. Intermediate phones forward the sound pulse silently with text masked.`;
   } else {
-    explanation = '🖥️ <strong>Projector Wall Mode:</strong> Beams message directly to the big room projector display to show live hop telemetry.';
+    explanation = `<span class="inline-icon" style="display:inline-flex; vertical-align:middle; margin-right:6px; color:var(--text-secondary);">${ICONS.wall}</span><strong>Projector Wall Mode:</strong> Beams message directly to the big room projector display to show live hop telemetry.`;
   }
 
   return `
@@ -57,14 +59,17 @@ export function renderTargetSelector(targetType: TargetType, unicastHex: string)
       </div>
 
       <div class="flex gap-6 mb-8 target-toggle-group">
-        <button type="button" class="btn ${targetType === 'broadcast' ? 'btn-primary' : 'btn-outline'} flex-1" id="target-btn-broadcast">
-          🔊 Everyone in Room
+        <button type="button" class="btn ${targetType === 'broadcast' ? 'btn-primary' : 'btn-outline'} flex-1 flex items-center justify-center gap-6" id="target-btn-broadcast">
+          ${ICONS.broadcast}
+          <span>Everyone in Room</span>
         </button>
-        <button type="button" class="btn ${targetType === 'unicast' ? 'btn-primary' : 'btn-outline'} flex-1" id="target-btn-unicast">
-          🎯 Direct Unicast (#ID)
+        <button type="button" class="btn ${targetType === 'unicast' ? 'btn-primary' : 'btn-outline'} flex-1 flex items-center justify-center gap-6" id="target-btn-unicast">
+          ${ICONS.target}
+          <span>Direct Unicast (#ID)</span>
         </button>
-        <button type="button" class="btn ${targetType === 'wall' ? 'btn-primary' : 'btn-outline'} flex-1" id="target-btn-wall">
-          🖥️ Projector Wall
+        <button type="button" class="btn ${targetType === 'wall' ? 'btn-primary' : 'btn-outline'} flex-1 flex items-center justify-center gap-6" id="target-btn-wall">
+          ${ICONS.wall}
+          <span>Projector Wall</span>
         </button>
       </div>
 
@@ -139,7 +144,7 @@ export function bindTargetSelectorEvents(
       chipPreview.textContent = `#${currentHex} · Direct Unicast`;
     }
     if (explanationBox) {
-      explanationBox.innerHTML = `🎯 <strong>Direct Unicast Mode:</strong> Only phone <strong>#${currentHex}</strong> rings, flashes Cyan, and unlocks this message. Intermediate phones forward the sound pulse silently with text masked.`;
+      explanationBox.innerHTML = `<span class="inline-icon" style="display:inline-flex; vertical-align:middle; margin-right:6px; color:var(--color-cyan, #0891b2);">${ICONS.target}</span><strong>Direct Unicast Mode:</strong> Only phone <strong>#${currentHex}</strong> rings, flashes Cyan, and unlocks this message. Intermediate phones forward the sound pulse silently with text masked.`;
     }
     if (btnInstantText) {
       btnInstantText.textContent = `Send Direct Beacon to Phone #${currentHex} (14B • 3x repeats)`;
