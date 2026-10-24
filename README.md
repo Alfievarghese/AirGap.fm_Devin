@@ -6,7 +6,7 @@ One phone chirps, every phone in the room lights up and passes it on, with no in
 
 ![AirGap.fm Cover](cover.svg)
 
-Live demo: [LIVE URL]
+Live demo: https://airgap-fm.vercel.app
 
 Demo video: [DEMO LINK]
 
@@ -14,7 +14,7 @@ QR code for phone demo: [QR CODE]
 
 ## Try it in 60 seconds
 
-1. Open [LIVE URL] on Phone A and Phone B in any browser.
+1. Open https://airgap-fm.vercel.app on Phone A and Phone B in any browser.
 2. On Phone A, tap Start Acoustic Listener to turn on the microphone.
 3. On Phone B, open Sender (TX).
 4. On Phone B, tap Broadcast Emergency Beacon.
