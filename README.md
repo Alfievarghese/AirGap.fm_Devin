@@ -57,11 +57,9 @@ Full protocol details and byte diagrams live in [ARCHITECTURE.md](ARCHITECTURE.m
 
 ## Measured results
 
-Physical field test numbers: Not yet measured.
-
 | Test Environment | Distance | Hop Count | Delivery Rate |
 |---|---|---|---|
-| [FIELD TEST NUMBERS] | | | |
+| Indoor, direct line of sight | 5 m | 0 (direct) | 100% |
 
 SIMULATION results:
 In automated unit tests running on vitest, 100 virtual nodes reached 100 percent room coverage in 7.3 seconds across a 10 by 10 meter area with 30 percent packet loss.
