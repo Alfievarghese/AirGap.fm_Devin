@@ -161,6 +161,13 @@ export const EMERGENCY_DICTIONARY: [string, string, string][] = [
   ['devin', 'ഡെവിൻ', 'डेविन'],
   ['ai', 'എഐ', 'एआई'],
   ['devin ai', 'ഡെവിൻ എഐ', 'डेविन एआई'],
+  ['wave', 'തരംഗം', 'तरंग'],
+  ['chai', 'ചായ', 'चाय'],
+  ['goal', 'ഗോൾ', 'गोल'],
+  ['party', 'പാർട്ടി', 'पार्टी'],
+  ['order', 'ഓർഡർ', 'आर्डर'],
+  ['ready', 'റെഡി', 'तैयार'],
+  ['roll call', 'ഹാജർ', 'हाज़िरी'],
 ];
 
 /** Fast lookup hash maps for dictionary translation */

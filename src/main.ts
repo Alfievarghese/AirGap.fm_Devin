@@ -187,7 +187,7 @@ function render(): void {
             AirGap<span class="brand-tld">.fm</span>
             <span class="brand-channel-tag">CH-01 · 1.8-6.3 kHz</span>
           </div>
-          <div class="brand-sub">Offline Acoustic Mesh Transceiver</div>
+          <div class="brand-sub">A radio station made of phones · Nothing to pair, nothing to join</div>
         </div>
       </div>
       <div class="header-meta">
@@ -297,8 +297,8 @@ function renderListener(el: HTMLElement): void {
   el.innerHTML = `
     <div class="flex justify-between items-center mb-16">
       <div>
-        <h1 style="font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Acoustic Transceiver Node</h1>
-        <p class="text-secondary" style="font-size: 13px; margin-top: 2px;">Relays emergency beacons across phones using sound waves.</p>
+        <h1 style="font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Acoustic Receiver (RX)</h1>
+        <p class="text-secondary" style="font-size: 13px; margin-top: 2px;">One phone chirps, every phone in the room lights up and passes it on.</p>
       </div>
       <div>
         <select id="listener-lang" style="width: auto; padding: 7px 14px; font-size: 12px; font-weight: 600; background: #ffffff; border: 1.5px solid var(--border-card); border-radius: var(--radius-sm); color: var(--text-primary); cursor: pointer;">
@@ -327,12 +327,12 @@ function renderListener(el: HTMLElement): void {
       </p>
     </div>
 
-    <!-- Active Emergency Banner (Hidden until alert heard) -->
+    <!-- Active Message Banner (Hidden until wave heard) -->
     <div id="listener-alert-card" class="alert-card-hero" style="display: none;">
       <div class="flex items-center justify-between mb-8">
         <div class="alert-badge-top" style="margin-bottom: 0;">
-          ${ICONS.alertTriangle}
-          <span id="listener-card-type-label">ACOUSTIC BEACON RECEIVED</span>
+          ${ICONS.radioWave}
+          <span id="listener-card-type-label">WAVE RECEIVED</span>
         </div>
         <div id="listener-direct-badge" style="display: none;">
           <span class="chip font-mono" style="background: rgba(6, 182, 212, 0.15); color: #0891b2; border: 1.5px solid #06b6d4; font-weight: 800; padding: 4px 10px;">
@@ -340,7 +340,7 @@ function renderListener(el: HTMLElement): void {
           </span>
         </div>
       </div>
-      <h2 id="listener-alert-text">EMERGENCY ALERT</h2>
+      <h2 id="listener-alert-text">WAVE MESSAGE</h2>
       <div class="alert-meta-grid">
         <div class="alert-meta-item">
           <div class="alert-meta-label">Hop Level</div>
@@ -457,7 +457,7 @@ function renderListener(el: HTMLElement): void {
               <span class="frame-segment-byte">1B</span>
               <span class="frame-segment-label">Hop|TTL</span>
             </div>
-            <div class="frame-segment frame-segment-mac" data-desc="HMAC-SHA256 (4 Bytes): Truncated 32-bit cryptographic tag verifying civil authority origin over immutable bytes [0..8].">
+            <div class="frame-segment frame-segment-mac" data-desc="HMAC-SHA256 (4 Bytes): Truncated 32-bit cryptographic tag verifying transmitter origin over immutable bytes [0..8].">
               <span class="frame-segment-byte">4B</span>
               <span class="frame-segment-label">HMAC</span>
             </div>
@@ -479,21 +479,21 @@ function renderListener(el: HTMLElement): void {
               <div class="field-step-badge">1</div>
               <div class="field-step-body">
                 <h4>Turn Airplane Mode ON</h4>
-                <p>Disable Wi-Fi, Bluetooth, and cellular. The Web Audio stack operates completely offline in local browser cache.</p>
+                <p>Disable Wi-Fi, Bluetooth, and cellular. Nothing to pair, nothing to join. Operates 100% offline in browser cache.</p>
               </div>
             </div>
             <div class="field-step-item">
               <div class="field-step-badge">2</div>
               <div class="field-step-body">
                 <h4>Acoustic FSK Propagation</h4>
-                <p>When an alert triggers, phones emit 6 simultaneous FSK tones across 96 subbands between 1.8 kHz and 6.3 kHz.</p>
+                <p>When a wave is broadcast, phones emit 6 simultaneous FSK tones across 96 subbands between 1.8 kHz and 6.3 kHz.</p>
               </div>
             </div>
             <div class="field-step-item">
               <div class="field-step-badge">3</div>
               <div class="field-step-body">
-                <h4>HMAC Verification & Green Wave</h4>
-                <p>Each phone verifies the 32-bit HMAC signature, pulses the screen green, decrements TTL, and relays to the next room.</p>
+                <h4>HMAC Verification & Room Ripple</h4>
+                <p>Each phone verifies the 32-bit HMAC signature, pulses the screen green, decrements TTL, and ripples the wave onward.</p>
               </div>
             </div>
           </div>
@@ -568,12 +568,12 @@ function renderAuthority(el: HTMLElement): void {
   el.innerHTML = `
     <div class="flex justify-between items-center mb-12">
       <div>
-        <h1 style="font-family: var(--font-display); font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">Sender & Civil Authority (TX)</h1>
-        <p class="text-secondary" style="font-size: 13px;">Cryptographically authenticated origin transmitter for emergency acoustic mesh alerts.</p>
+        <h1 style="font-family: var(--font-display); font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">Send a Wave (TX)</h1>
+        <p class="text-secondary" style="font-size: 13px;">A radio station made of phones. One chirp cascades across the room in a live acoustic wave.</p>
       </div>
       <div class="status-badge" style="background: var(--color-primary-subtle); border: 1.5px solid var(--color-primary-border); color: var(--color-primary);">
         ${ICONS.authority}
-        <span>EMERGENCY TRANSMITTER</span>
+        <span>WAVE TRANSMITTER</span>
       </div>
     </div>
 
@@ -584,7 +584,7 @@ function renderAuthority(el: HTMLElement): void {
         <div class="card">
           <div class="card-title" style="margin-bottom: 0;">
             ${ICONS.authority}
-            <span>Transmitter Status</span>
+            <span>Wave Transmitter Status</span>
           </div>
           <div class="flex flex-col gap-8 mt-12">
             <div class="flex justify-between items-center p-8" style="background: var(--bg-inset); border-radius: var(--radius-sm); border: 1px solid var(--border-line);">
@@ -616,32 +616,48 @@ function renderAuthority(el: HTMLElement): void {
             <canvas id="auth-mesh3d-canvas" class="mesh3d-canvas" width="540" height="190"></canvas>
             <div class="mesh3d-hint">Interactive 3D Key Anchor</div>
           </div>
-          <p class="text-secondary mt-8" style="font-size: 12px; line-height: 1.5;">Only emergency beacons cryptographically authenticated by this authority root will propagate across citizen acoustic relays.</p>
+          <p class="text-secondary mt-8" style="font-size: 12px; line-height: 1.5;">Only acoustic waves cryptographically signed by the origin transmitter will propagate across phones in the room.</p>
         </div>
       </div>
 
       <!-- Right Column: Target Destination & Message Composer -->
       <div>
+        <!-- The Wave Hero Quick Action Banner -->
+        <div class="card p-12 mb-12" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(16, 185, 129, 0.12)); border: 1.5px solid rgba(6, 182, 212, 0.35); border-radius: var(--radius-md);">
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-10">
+              <span style="font-size: 24px; line-height: 1;">🌊</span>
+              <div>
+                <strong style="font-family: var(--font-display); font-size: 15px; color: var(--text-primary); display: block;">The Wave · Stadium Ripple</strong>
+                <span class="text-xs text-secondary">One tap ripples across every phone in the room. Screens light up in sequence!</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" id="send-the-wave-quick-btn" style="padding: 10px 18px; font-size: 14px; font-weight: 700; background: linear-gradient(135deg, #0284c7, #059669); border: none; white-space: nowrap;" ${isAuthorityBroadcasting ? 'disabled' : ''}>
+              🌊 Send The Wave
+            </button>
+          </div>
+        </div>
+
         ${renderTargetSelector(authTargetType, authUnicastHex)}
 
         <div class="card p-0" style="overflow: hidden;">
           <!-- Dual Subtabs Nav -->
           <div class="auth-tabs-nav">
             <button class="auth-subtab ${authActiveTab === 'instant' ? 'active' : ''}" id="auth-subtab-instant">
-              ${ICONS.alertTriangle}
-              <span>Instant Multilingual Alert</span>
+              ${ICONS.radioWave}
+              <span>The Wave & Hall FM</span>
             </button>
             <button class="auth-subtab ${authActiveTab === 'custom' ? 'active' : ''}" id="auth-subtab-custom">
               ${ICONS.broadcast}
-              <span>Custom Pager (EN / ML / HI)</span>
+              <span>Telephone Game (EN / ML / HI)</span>
             </button>
           </div>
 
           <div class="p-16">
-            <!-- SUBTAB 1: Instant Multilingual Alert -->
+            <!-- SUBTAB 1: The Wave & Hall FM -->
             <div id="auth-tab-instant-content" style="${authActiveTab === 'instant' ? '' : 'display: none;'}">
               <div class="mb-12">
-                <label class="text-xs text-secondary font-bold uppercase tracking-wider block mb-6">1-Tap Emergency Template</label>
+                <label class="text-xs text-secondary font-bold uppercase tracking-wider block mb-6">1-Tap Wave & Hall FM Template</label>
                 <select id="auth-template" class="w-full mb-8">
                   ${TEMPLATES.map(
                     (t) => `
@@ -655,7 +671,7 @@ function renderAuthority(el: HTMLElement): void {
               <!-- Modular 3-Dropdown Sentence Builder -->
               <div class="p-12 mb-12" style="background: var(--bg-inset); border-radius: var(--radius-md); border: 1px solid var(--border-line);">
                 <div class="flex justify-between items-center mb-8">
-                  <span class="text-xs font-bold text-primary uppercase tracking-wider">Modular Sentence Builder (3 Bytes)</span>
+                  <span class="text-xs font-bold text-primary uppercase tracking-wider">Modular Announcement Builder (3 Bytes)</span>
                   <span class="chip chip-sm font-mono">Params: 3B</span>
                 </div>
                 <div class="grid grid-cols-1 gap-8 mb-8">
@@ -696,18 +712,18 @@ function renderAuthority(el: HTMLElement): void {
                 ${ICONS.broadcast}
                 <span id="auth-btn-text">
                   ${authTargetType === 'broadcast'
-                    ? 'Broadcast Emergency Beacon to Room (14B • 3x repeats)'
+                    ? 'Send a Wave to Room (14B • 3x repeats)'
                     : authTargetType === 'unicast'
-                    ? `Send Direct Beacon to Phone #${authUnicastHex} (14B • 3x repeats)`
-                    : 'Send Emergency Beacon to Projector Wall (14B • 3x repeats)'}
+                    ? `Send Direct Wave to Phone #${authUnicastHex} (14B • 3x repeats)`
+                    : 'Send Wave to Projector Wall (14B • 3x repeats)'}
                 </span>
               </button>
             </div>
 
-            <!-- SUBTAB 2: Custom Pager (EN / ML / HI) -->
+            <!-- SUBTAB 2: Telephone Game (EN / ML / HI) -->
             <div id="auth-tab-custom-content" style="${authActiveTab === 'custom' ? '' : 'display: none;'}">
               <div class="flex justify-between items-center mb-8">
-                <label class="font-bold text-primary" style="font-size: 14px; letter-spacing: 0.02em;">Custom Emergency Text</label>
+                <label class="font-bold text-primary" style="font-size: 14px; letter-spacing: 0.02em;">Telephone Game Pager</label>
                 <div id="pager-script-badge" class="badge badge-outline" style="font-size: 11px; padding: 3px 10px;">Max 7 Chars · ~1.2s Chirp</div>
               </div>
 
@@ -716,7 +732,7 @@ function renderAuthority(el: HTMLElement): void {
                   type="text" 
                   id="custom-pager-input" 
                   maxlength="7" 
-                  placeholder="e.g. DOCTOR, WATER, FLOODS, DEVIN" 
+                  placeholder="e.g. WAVE, CHAI, GOAL, PARTY, DEVIN" 
                   value="${customPagerText}" 
                   style="font-size: 18px; font-family: var(--font-mono); padding: 12px 14px; width: 100%; border-radius: var(--radius-md); border: 1.5px solid var(--border-line); letter-spacing: 0.03em;" 
                 />
@@ -728,14 +744,14 @@ function renderAuthority(el: HTMLElement): void {
 
               <!-- Quick Tokens Chips -->
               <div class="mb-16">
-                <div class="text-xs text-secondary mb-8 font-bold uppercase tracking-wider">Quick Disaster Keywords:</div>
+                <div class="text-xs text-secondary mb-8 font-bold uppercase tracking-wider">Quick Words:</div>
                 <div class="flex flex-wrap gap-8" id="pager-quick-chips">
+                  <button type="button" class="chip chip-pager" data-text="WAVE">WAVE</button>
+                  <button type="button" class="chip chip-pager" data-text="CHAI">CHAI</button>
+                  <button type="button" class="chip chip-pager" data-text="GOAL">GOAL</button>
+                  <button type="button" class="chip chip-pager" data-text="PARTY">PARTY</button>
+                  <button type="button" class="chip chip-pager" data-text="ORDER">ORDER</button>
                   <button type="button" class="chip chip-pager" data-text="HELP">HELP</button>
-                  <button type="button" class="chip chip-pager" data-text="WATER">WATER</button>
-                  <button type="button" class="chip chip-pager" data-text="FIRE">FIRE</button>
-                  <button type="button" class="chip chip-pager" data-text="FOOD">FOOD</button>
-                  <button type="button" class="chip chip-pager" data-text="DOCTOR">DOCTOR</button>
-                  <button type="button" class="chip chip-pager" data-text="SOS">SOS</button>
                   <button type="button" class="chip chip-pager" data-text="SAFE">SAFE</button>
                 </div>
               </div>
@@ -743,7 +759,7 @@ function renderAuthority(el: HTMLElement): void {
               <!-- Trilingual Live Preview Card -->
               <div class="p-16 mb-16" style="background: var(--bg-inset); border-radius: var(--radius-md); border: 1.5px solid var(--border-card); font-size: 13px; line-height: 1.5;">
                 <div class="flex justify-between items-center mb-10">
-                  <div class="text-xs font-mono font-bold text-secondary uppercase tracking-wider">Receiver Trilingual Preview:</div>
+                  <div class="text-xs font-mono font-bold text-secondary uppercase tracking-wider">Receiver Auto Transliteration Preview:</div>
                   <span id="pager-orig-badge" class="badge">Waiting for input...</span>
                 </div>
 
@@ -771,10 +787,10 @@ function renderAuthority(el: HTMLElement): void {
                 ${ICONS.broadcast}
                 <span id="auth-custom-btn-text">
                   ${authTargetType === 'broadcast'
-                    ? 'Broadcast Custom Pager Chirp (14B • ~1.2s airtime)'
+                    ? 'Broadcast Telephone Game Chirp (14B • ~1.2s airtime)'
                     : authTargetType === 'unicast'
                     ? `Send Direct Chirp to Phone #${authUnicastHex} (14B • ~1.2s airtime)`
-                    : 'Send Custom Chirp to Projector Wall (14B • ~1.2s airtime)'}
+                    : 'Send Telephone Game Chirp to Projector Wall (14B • ~1.2s airtime)'}
                 </span>
               </button>
             </div>
@@ -881,10 +897,10 @@ function renderAuthority(el: HTMLElement): void {
       if (isDict) {
         pagerOrigBadge.className = 'badge';
         pagerOrigBadge.style.cssText = 'background: var(--color-emerald-subtle); color: var(--color-emerald); border: 1px solid var(--color-emerald-border); font-weight: 700;';
-        pagerOrigBadge.textContent = 'Dictionary Translation';
+        pagerOrigBadge.textContent = 'Auto transliteration';
 
         if (modeInfo) {
-          modeInfo.innerHTML = `<strong>Verified Translation:</strong> Receiving phones will automatically display this alert in their native language.`;
+          modeInfo.innerHTML = `<strong>Auto transliteration:</strong> Receiving phones will automatically display this word in their native script.`;
         }
         customEn.textContent = tEn.translatedText || customPagerText;
         customMl.textContent = tMl.translatedText || customPagerText;
@@ -892,10 +908,10 @@ function renderAuthority(el: HTMLElement): void {
       } else if (isTrans) {
         pagerOrigBadge.className = 'badge';
         pagerOrigBadge.style.cssText = 'background: rgba(30, 58, 138, 0.08); color: #1e40af; border: 1px solid rgba(30, 58, 138, 0.25); font-weight: 700;';
-        pagerOrigBadge.textContent = 'Phonetic Script';
+        pagerOrigBadge.textContent = 'Auto transliteration';
 
         if (modeInfo) {
-          modeInfo.innerHTML = `<strong>Phonetic Transliteration:</strong> Rendered into Malayalam & Devanagari phonetic script so receivers read names in local scripts.`;
+          modeInfo.innerHTML = `<strong>Auto transliteration:</strong> Rendered phonetically into Malayalam & Devanagari script so receivers read names in local scripts.`;
         }
         customEn.textContent = customPagerText;
         customMl.textContent = tMl.translatedText;
@@ -954,7 +970,30 @@ function renderAuthority(el: HTMLElement): void {
     }
   );
 
-  // Broadcast Instant Alert
+  // The Wave Quick Action 1-Tap Trigger
+  el.querySelector('#send-the-wave-quick-btn')?.addEventListener('click', async () => {
+    const waveBtn = el.querySelector('#send-the-wave-quick-btn') as HTMLButtonElement | null;
+    const originalText = waveBtn?.textContent ?? '🌊 Send The Wave';
+    if (waveBtn) {
+      waveBtn.disabled = true;
+      waveBtn.textContent = '🌊 Rippling...';
+    }
+    try {
+      await initAudio();
+      const targetNodeId = resolveTargetNodeId(authTargetType, authUnicastHex);
+      await sendAuthorityBeacon(0x10, undefined, targetNodeId);
+    } catch (err) {
+      console.error('AirGap.fm The Wave Broadcast failed:', err);
+      alert(`The Wave broadcast failed: ${err}`);
+    } finally {
+      if (waveBtn) {
+        waveBtn.disabled = false;
+        waveBtn.textContent = originalText;
+      }
+    }
+  });
+
+  // Broadcast Wave & Hall FM
   el.querySelector('#auth-broadcast-btn')!.addEventListener('click', async () => {
     const btn = el.querySelector('#auth-broadcast-btn') as HTMLButtonElement | null;
     const btnText = el.querySelector('#auth-btn-text') as HTMLElement | null;
@@ -962,7 +1001,7 @@ function renderAuthority(el: HTMLElement): void {
     const originalText = btnText?.textContent ?? '';
 
     if (btn) btn.disabled = true;
-    if (btnText) btnText.textContent = 'Transmitting Beacon...';
+    if (btnText) btnText.textContent = 'Transmitting Wave...';
 
     try {
       await initAudio();
@@ -980,10 +1019,10 @@ function renderAuthority(el: HTMLElement): void {
     }
   });
 
-  // Broadcast Custom Pager Chirp
+  // Broadcast Telephone Game Chirp
   el.querySelector('#auth-broadcast-custom-btn')!.addEventListener('click', async () => {
     if (!customPagerText.trim()) {
-      alert('Please enter pager text first (e.g. HELP, WATER, or Malayalam)');
+      alert('Please enter pager text first (e.g. WAVE, CHAI, GOAL, PARTY)');
       return;
     }
 
@@ -993,7 +1032,7 @@ function renderAuthority(el: HTMLElement): void {
     const originalText = btnText?.textContent ?? '';
 
     if (btn) btn.disabled = true;
-    if (btnText) btnText.textContent = 'Transmitting Pager Chirp...';
+    if (btnText) btnText.textContent = 'Transmitting Game Chirp...';
 
     try {
       await initAudio();
@@ -1017,8 +1056,8 @@ function renderWall(el: HTMLElement): void {
   el.innerHTML = `
     <div class="flex justify-between items-center mb-16">
       <div>
-        <h1 style="font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">The Wall · Room Race Monitor</h1>
-        <p class="text-secondary" style="font-size: 13px; margin-top: 2px;">Live acoustic propagation telemetry and full-spectrum waterfall for projector display.</p>
+        <h1 style="font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">The Wall · Hall FM & Wave Monitor</h1>
+        <p class="text-secondary" style="font-size: 13px; margin-top: 2px;">Live acoustic wave telemetry and full-spectrum waterfall for projector display.</p>
       </div>
       <div class="flex gap-8 items-center">
         <button class="btn btn-outline" id="wall-fullscreen-btn">
@@ -1130,7 +1169,7 @@ function renderWall(el: HTMLElement): void {
           <div class="terminal-title">Mesh Telemetry Waterfall</div>
         </div>
         <div class="terminal-log" id="wall-timeline" style="max-height: 240px;">
-          ${wallFrameCount === 0 ? '<div class="text-muted">Waiting for acoustic broadcast waves. Arm listener and broadcast from Authority.</div>' : ''}
+          ${wallFrameCount === 0 ? '<div class="text-muted">Waiting for acoustic waves. Tap "Send The Wave" in Sender (TX) to watch the room ripple.</div>' : ''}
         </div>
       </div>
     </div>
@@ -1520,7 +1559,7 @@ function renderSim(el: HTMLElement): void {
             <span>Hop Propagation Topology</span>
           </div>
           <div class="flex flex-col gap-6 text-faint font-mono" style="font-size: 12px;">
-            <div class="flex items-center gap-8"><span class="text-vermilion font-bold">●</span> Origin (Civil Authority Node)</div>
+            <div class="flex items-center gap-8"><span class="text-vermilion font-bold">●</span> Origin (Transmitter Node)</div>
             <div class="flex items-center gap-8"><span class="text-cyan font-bold">●</span> Hop 1 (Direct Acoustic Reception)</div>
             <div class="flex items-center gap-8"><span class="text-patina font-bold">●</span> Hop 2 (First Relay Wave)</div>
             <div class="flex items-center gap-8"><span class="text-gold font-bold">●</span> Hop 3+ (Multi-hop Room Cascade)</div>
@@ -2107,8 +2146,9 @@ function showAlert(text: string, frame: BeaconFrame): void {
   }
 
   // Room Broadcast:
-  // Every receiving node displays full alert card, flashes Emerald Green, and schedules Trickle relay.
-  const tag = isCustom ? 'CUSTOM PAGER' : isModular ? 'MODULAR ALERT' : 'EMERGENCY BEACON';
+  // Every receiving node displays message card, flashes Emerald Green, and schedules Trickle relay.
+  const isWave = text.includes('Wave') || text.includes('വേവ്') || text.includes('WAVE') || text.includes('തരംഗം');
+  const tag = isCustom ? 'TELEPHONE GAME' : isModular ? 'HALL FM' : isWave ? 'THE WAVE' : 'ACOUSTIC WAVE';
   triggerScreenFlash('emerald', `HOP ${frame.hop} • ${tag}`, text.substring(0, 36));
 
   if ('vibrate' in navigator) {

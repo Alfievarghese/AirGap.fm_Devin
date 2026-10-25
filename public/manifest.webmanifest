@@ -1,7 +1,7 @@
 {
-  "name": "AirGap.fm Offline Acoustic Transceiver",
+  "name": "AirGap.fm · A radio station made of phones",
   "short_name": "AirGap.fm",
-  "description": "Offline acoustic mesh alert system relaying emergency beacons across air-gapped devices using sound waves.",
+  "description": "A radio station made of phones. Nothing to pair, nothing to join. Phones relay messages across rooms using sound waves alone.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f3ec",

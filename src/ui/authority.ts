@@ -42,11 +42,11 @@ export function renderTargetSelector(targetType: TargetType, unicastHex: string)
 
   let explanation = '';
   if (targetType === 'broadcast') {
-    explanation = `<span class="inline-icon" style="display:inline-flex; vertical-align:middle; margin-right:6px; color:var(--color-primary);">${ICONS.broadcast}</span><strong>Room Broadcast Mode:</strong> Every phone in earshot will ring, flash, show the alert, and forward the sound wave.`;
+    explanation = `<span class="inline-icon" style="display:inline-flex; vertical-align:middle; margin-right:6px; color:var(--color-primary);">${ICONS.broadcast}</span><strong>Room Broadcast Mode:</strong> Every phone in earshot will ring, flash, and forward the sound wave across the room.`;
   } else if (targetType === 'unicast') {
     explanation = `<span class="inline-icon" style="display:inline-flex; vertical-align:middle; margin-right:6px; color:var(--color-cyan, #0891b2);">${ICONS.target}</span><strong>Direct Unicast Mode:</strong> Only phone <strong>#${unicastHex || '??'}</strong> rings, flashes Cyan, and unlocks this message. Intermediate phones forward the sound pulse silently with text masked.`;
   } else {
-    explanation = `<span class="inline-icon" style="display:inline-flex; vertical-align:middle; margin-right:6px; color:var(--text-secondary);">${ICONS.wall}</span><strong>Projector Wall Mode:</strong> Beams message directly to the big room projector display to show live hop telemetry.`;
+    explanation = `<span class="inline-icon" style="display:inline-flex; vertical-align:middle; margin-right:6px; color:var(--text-secondary);">${ICONS.wall}</span><strong>Projector Wall Mode:</strong> Beams the acoustic wave to the projector wall display to show live hop telemetry.`;
   }
 
   return `
@@ -147,7 +147,7 @@ export function bindTargetSelectorEvents(
       explanationBox.innerHTML = `<span class="inline-icon" style="display:inline-flex; vertical-align:middle; margin-right:6px; color:var(--color-cyan, #0891b2);">${ICONS.target}</span><strong>Direct Unicast Mode:</strong> Only phone <strong>#${currentHex}</strong> rings, flashes Cyan, and unlocks this message. Intermediate phones forward the sound pulse silently with text masked.`;
     }
     if (btnInstantText) {
-      btnInstantText.textContent = `Send Direct Beacon to Phone #${currentHex} (14B • 3x repeats)`;
+      btnInstantText.textContent = `Send Direct Wave to Phone #${currentHex} (14B • 3x repeats)`;
     }
     if (btnCustomText) {
       btnCustomText.textContent = `Send Direct Chirp to Phone #${currentHex} (14B • ~1.2s airtime)`;

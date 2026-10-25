@@ -54,9 +54,33 @@ export const TEMPLATES: AlertTemplate[] = [
   },
   {
     id: 0x10,
-    en: 'Relay Race: Message hop! Pass it on.',
-    ml: 'റിലേ റേസ്: സന്ദേശം വന്നു! കൈമാറുക.',
-    hi: 'रिले रेस: संदेश आया! आगे भेजें।',
+    en: '🌊 The Wave! Ripple across the hall! Pass it on.',
+    ml: '🌊 വേവ്! ഹാൾ മുഴുവൻ കൈമാറുക!',
+    hi: '🌊 द वेव! पूरे हॉल में आगे बढ़ाएं!',
+  },
+  {
+    id: 0x11,
+    en: 'Hall FM: Order ready! Collect at counter.',
+    ml: 'ഹാൾ എഫ്എം: ഓർഡർ റെഡി! കൗണ്ടറിൽ നിന്നും വാങ്ങുക.',
+    hi: 'हॉल एफएम: आर्डर तैयार! काउंटर से प्राप्त करें।',
+  },
+  {
+    id: 0x12,
+    en: 'Hall FM: Hackathon roll call. Check in now.',
+    ml: 'ഹാൾ എഫ്എം: ഹാക്കത്തോൺ ഹാജർ നില. ഇപ്പോൾ അറിയിക്കുക.',
+    hi: 'हॉल एफएम: हैकाथॉन हाज़िरी। अभी दर्ज करें।',
+  },
+  {
+    id: 0x13,
+    en: 'Hall FM: Chai break! Hot tea served.',
+    ml: 'ഹാൾ എഫ്എം: ചായ സമയം! ചൂടുള്ള ചായ റെഡി.',
+    hi: 'हॉल एफएम: चाय का समय! गर्म चाय तैयार है।',
+  },
+  {
+    id: 0x14,
+    en: 'Match Alert: GOAL! Score update.',
+    ml: 'മാച്ച് അപ്ഡേറ്റ്: ഗോൾ! സ്കോർ അപ്ഡേറ്റ്.',
+    hi: 'मैच अपडेट: गोल! स्कोर अपडेट।',
   },
 ];
 
