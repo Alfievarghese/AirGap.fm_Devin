@@ -5,6 +5,7 @@
  */
 
 import './style.css';
+import { inject as injectAnalytics } from '@vercel/analytics';
 import ggwaveFactory from 'ggwave';
 import { AudioEngine, AudioState } from './audio/engine';
 import { RelayEngine } from './relay/relay';
@@ -2373,4 +2374,5 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+injectAnalytics();
 render();
