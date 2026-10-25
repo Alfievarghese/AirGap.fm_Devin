@@ -7,7 +7,7 @@
 
 import type { RelayConfig } from '../lib/config';
 import { DEFAULT_CONFIG, randRange } from '../lib/config';
-import type { GGWaveModule } from 'ggwave';
+import ggwaveFactory, { type GGWaveModule } from 'ggwave';
 
 export type AudioState = 'IDLE' | 'LISTEN' | 'TX' | 'COOLDOWN';
 
@@ -77,8 +77,7 @@ export class AudioEngine {
     // 3. Load ggwave WASM
     if (!ggwaveModule) {
       try {
-        const factory = (await import('ggwave')).default;
-        ggwaveModule = await factory();
+        ggwaveModule = await ggwaveFactory();
       } catch (e) {
         this.callbacks.onError(`ggwave load failed: ${e}`);
         throw e;
@@ -334,6 +333,10 @@ export class AudioEngine {
       throw new Error('Not initialized');
     }
 
+    if (this.ctx.state === 'suspended') {
+      await this.ctx.resume();
+    }
+
     if (this.state === 'TX') {
       console.warn('Already transmitting, ignoring');
       return;
@@ -431,7 +434,7 @@ export class AudioEngine {
         this.setState('COOLDOWN');
         this.cooldownTimer = setTimeout(() => {
           this.cooldownTimer = null;
-          this.setState('LISTEN');
+          this.setState(prevState);
           resolve();
         }, this.config.txCooldownMs);
       };
@@ -442,7 +445,7 @@ export class AudioEngine {
           this.setState('COOLDOWN');
           this.cooldownTimer = setTimeout(() => {
             this.cooldownTimer = null;
-            this.setState('LISTEN');
+            this.setState(prevState);
             resolve();
           }, this.config.txCooldownMs);
         }

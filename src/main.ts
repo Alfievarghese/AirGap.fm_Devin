@@ -5,6 +5,7 @@
  */
 
 import './style.css';
+import ggwaveFactory from 'ggwave';
 import { AudioEngine, AudioState } from './audio/engine';
 import { RelayEngine } from './relay/relay';
 import {
@@ -955,19 +956,28 @@ function renderAuthority(el: HTMLElement): void {
 
   // Broadcast Instant Alert
   el.querySelector('#auth-broadcast-btn')!.addEventListener('click', async () => {
+    const btn = el.querySelector('#auth-broadcast-btn') as HTMLButtonElement | null;
+    const btnText = el.querySelector('#auth-btn-text') as HTMLElement | null;
     const targetNodeId = resolveTargetNodeId(authTargetType, authUnicastHex);
-    isAuthorityBroadcasting = true;
-    render();
+    const originalText = btnText?.textContent ?? '';
 
-    await initAudio();
-    if (useModularSentence) {
-      await sendAuthorityBeacon(0xff, new Uint8Array([modularSubjectId, modularActionId, modularLocationId]), targetNodeId);
-    } else {
-      await sendAuthorityBeacon(selectedTemplateId, undefined, targetNodeId);
+    if (btn) btn.disabled = true;
+    if (btnText) btnText.textContent = 'Transmitting Beacon...';
+
+    try {
+      await initAudio();
+      if (useModularSentence) {
+        await sendAuthorityBeacon(0xff, new Uint8Array([modularSubjectId, modularActionId, modularLocationId]), targetNodeId);
+      } else {
+        await sendAuthorityBeacon(selectedTemplateId, undefined, targetNodeId);
+      }
+    } catch (err) {
+      console.error('AirGap.fm Broadcast failed:', err);
+      alert(`Broadcast failed: ${err}`);
+    } finally {
+      if (btn) btn.disabled = false;
+      if (btnText && originalText) btnText.textContent = originalText;
     }
-
-    isAuthorityBroadcasting = false;
-    render();
   });
 
   // Broadcast Custom Pager Chirp
@@ -977,15 +987,24 @@ function renderAuthority(el: HTMLElement): void {
       return;
     }
 
+    const btn = el.querySelector('#auth-broadcast-custom-btn') as HTMLButtonElement | null;
+    const btnText = el.querySelector('#auth-custom-btn-text') as HTMLElement | null;
     const targetNodeId = resolveTargetNodeId(authTargetType, authUnicastHex);
-    isAuthorityBroadcasting = true;
-    render();
+    const originalText = btnText?.textContent ?? '';
 
-    await initAudio();
-    await sendCustomPagerBeacon(customPagerText.trim(), targetNodeId);
+    if (btn) btn.disabled = true;
+    if (btnText) btnText.textContent = 'Transmitting Pager Chirp...';
 
-    isAuthorityBroadcasting = false;
-    render();
+    try {
+      await initAudio();
+      await sendCustomPagerBeacon(customPagerText.trim(), targetNodeId);
+    } catch (err) {
+      console.error('AirGap.fm Custom Broadcast failed:', err);
+      alert(`Broadcast failed: ${err}`);
+    } finally {
+      if (btn) btn.disabled = false;
+      if (btnText && originalText) btnText.textContent = originalText;
+    }
   });
 }
 
@@ -2257,7 +2276,6 @@ async function runLoopbackTest(): Promise<void> {
   resultEl.innerHTML = '<span class="text-muted">Testing RAM encode and decode...</span>';
 
   try {
-    const ggwaveFactory = (await import('ggwave')).default;
     const ggwave = await ggwaveFactory();
     const params = ggwave.getDefaultParameters();
     const instance = ggwave.init(params);
